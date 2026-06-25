@@ -1105,17 +1105,21 @@ body.pos-fullscreen #cartFab { z-index:700; }
           <div class="flex gap-8">
             <input class="search-input" id="custSearch" placeholder="🔍 بحث بالاسم أو الهاتف..." oninput="renderCustomers()" style="width:240px;" />
           </div>
-          <button class="btn btn-primary" onclick="openCustomerModal()">➕ إضافة عميل</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-outline" onclick="openLoyaltySettings()" style="font-size:13px;">🎯 إعدادات الولاء</button>
+            <button class="btn btn-primary" onclick="openCustomerModal()">➕ إضافة عميل</button>
+          </div>
         </div>
         <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-bottom:16px;">
           <div class="stat-card"><div class="stat-label">👥 إجمالي العملاء</div><div class="stat-value" id="cust-count" style="font-size:22px;">0</div></div>
-          <div class="stat-card"><div class="stat-label">⭐ عملاء VIP</div><div class="stat-value" id="cust-vip" style="font-size:22px; color:var(--warning);">0</div></div>
+          <div class="stat-card"><div class="stat-label">💎 بلاتيني+ذهبي</div><div class="stat-value" id="cust-vip" style="font-size:22px; color:var(--warning);">0</div></div>
           <div class="stat-card"><div class="stat-label">💰 إجمالي الإنفاق</div><div class="stat-value" id="cust-spent" style="font-size:22px;">0</div></div>
+          <div class="stat-card"><div class="stat-label">🎯 إجمالي النقاط</div><div class="stat-value" id="cust-pts" style="font-size:22px;color:#059669;">0</div></div>
         </div>
         <div class="card">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>الاسم</th><th>الهاتف</th><th>الزيارات</th><th>إجمالي الإنفاق</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead>
+              <thead><tr><th>الاسم</th><th>الهاتف</th><th>الزيارات</th><th>إجمالي الإنفاق</th><th>نقاط الولاء</th><th>الفئة</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead>
               <tbody id="customersBody"></tbody>
             </table>
           </div>
@@ -1140,9 +1144,19 @@ body.pos-fullscreen #cartFab { z-index:700; }
           <div id="bundlesBody"><div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد حزم بعد</div></div>
         </div>
         <!-- Threshold section -->
-        <div class="card">
+        <div class="card" style="margin-bottom:16px;">
           <div class="card-title" style="margin-bottom:12px;">💰 خصومات بحد أدنى للفاتورة</div>
           <div id="thresholdsBody"><div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد خصومات بعد</div></div>
+        </div>
+        <!-- Category discount section -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title" style="margin-bottom:12px;">🏷️ خصومات على فئة منتجات</div>
+          <div id="categoriesBody"><div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد خصومات فئات بعد</div></div>
+        </div>
+        <!-- Buy X Get Y section -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px;">🎁 اشتري X خد Y مجاناً</div>
+          <div id="bxgyBody"><div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد عروض اشتري وخد بعد</div></div>
         </div>
       </div>
 
@@ -2145,6 +2159,7 @@ function completeSale() {
     branchName: getBranchName(currentBranch)
   };
   addSale(sale);
+  if (sale.customerId) awardLoyaltyPoints(sale.customerId, sale.total);
   _lastSale = sale; // for WhatsApp sharing
   addAuditLog('sale.complete', `فاتورة #${String(sale.id||'').slice(-6)} — ${fmt(sale.total)} ج — ${sale.items.length} صنف`, sale.branchId);
 
@@ -4724,10 +4739,17 @@ function openPromoModal(id) {
   if (promo?.type === 'bundle') {
     _promoBundleItems = promo.items ? JSON.parse(JSON.stringify(promo.items)) : [];
   }
-  document.getElementById('promoBundlePrice').value = promo?.bundlePrice || '';
-  document.getElementById('promoMinAmount').value   = promo?.minAmount || '';
-  document.getElementById('promoDiscType').value    = promo?.discountType || 'percent';
-  document.getElementById('promoDiscValue').value   = promo?.discountValue || '';
+  document.getElementById('promoBundlePrice').value   = promo?.bundlePrice || '';
+  document.getElementById('promoMinAmount').value     = promo?.minAmount || '';
+  document.getElementById('promoDiscType').value      = promo?.discountType || 'percent';
+  document.getElementById('promoDiscValue').value     = promo?.discountValue || '';
+  document.getElementById('promoCatDisc').value       = promo?.categoryDisc || '';
+  document.getElementById('promoCatName').value       = promo?.categoryName || '';
+  document.getElementById('promoBuyQty').value        = promo?.buyQty || 1;
+  document.getElementById('promoGetQty').value        = promo?.getQty || 1;
+  document.getElementById('promoStartDate').value     = promo?.startDate || '';
+  document.getElementById('promoEndDate').value       = promo?.endDate || '';
+  if (promo?.type === 'bxgy') _promoBundleItems = promo.items ? JSON.parse(JSON.stringify(promo.items)) : [];
   renderPromoBundleItems();
   togglePromoTypeUI();
   document.getElementById('promoModal').classList.remove('hidden');
@@ -4737,6 +4759,8 @@ function togglePromoTypeUI() {
   const type = document.getElementById('promoType').value;
   document.getElementById('bundleSection').classList.toggle('hidden', type !== 'bundle');
   document.getElementById('thresholdSection').classList.toggle('hidden', type !== 'threshold');
+  document.getElementById('categorySection').classList.toggle('hidden', type !== 'category');
+  document.getElementById('bxgySection').classList.toggle('hidden', type !== 'bxgy');
 }
 
 function renderPromoBundleItems() {
@@ -4786,7 +4810,11 @@ function savePromo() {
   const type = document.getElementById('promoType').value;
   if (!name) { alert('أدخل اسم العرض'); return; }
 
+  const startDate = document.getElementById('promoStartDate').value;
+  const endDate   = document.getElementById('promoEndDate').value;
   let promo = { id: _promoEditId || Date.now(), name, type, active: true };
+  if (startDate) promo.startDate = startDate;
+  if (endDate)   promo.endDate   = endDate;
 
   if (type === 'bundle') {
     if (_promoBundleItems.length < 2) { alert('أضف منتجين على الأقل للحزمة'); return; }
@@ -4794,7 +4822,7 @@ function savePromo() {
     if (!bPrice || bPrice <= 0) { alert('أدخل سعر الحزمة'); return; }
     promo.items       = _promoBundleItems.map(b => ({...b}));
     promo.bundlePrice = bPrice;
-  } else {
+  } else if (type === 'threshold') {
     const minAmt  = parseFloat(document.getElementById('promoMinAmount').value);
     const dType   = document.getElementById('promoDiscType').value;
     const dVal    = parseFloat(document.getElementById('promoDiscValue').value);
@@ -4803,6 +4831,20 @@ function savePromo() {
     promo.minAmount    = minAmt;
     promo.discountType = dType;
     promo.discountValue = dVal;
+  } else if (type === 'category') {
+    const catName = document.getElementById('promoCatName').value.trim();
+    const catDisc = parseFloat(document.getElementById('promoCatDisc').value);
+    if (!catName) { alert('أدخل اسم الفئة'); return; }
+    if (!catDisc || catDisc <= 0 || catDisc > 100) { alert('أدخل نسبة الخصم (1-100)'); return; }
+    promo.categoryName = catName;
+    promo.categoryDisc = catDisc;
+  } else if (type === 'bxgy') {
+    if (!_promoBundleItems.length) { alert('أضف المنتج المطلوب شراؤه'); return; }
+    const buyQty = parseInt(document.getElementById('promoBuyQty').value) || 1;
+    const getQty = parseInt(document.getElementById('promoGetQty').value) || 1;
+    promo.items  = _promoBundleItems.map(b => ({...b}));
+    promo.buyQty = buyQty;
+    promo.getQty = getQty;
   }
 
   const list = getPromos();
@@ -4828,6 +4870,8 @@ function togglePromoActive(id) {
 function renderPromosPage() {
   const bundles    = getPromos().filter(p => p.type === 'bundle');
   const thresholds = getPromos().filter(p => p.type === 'threshold');
+  const categories = getPromos().filter(p => p.type === 'category');
+  const bxgys      = getPromos().filter(p => p.type === 'bxgy');
   const canEdit    = currentUser === 'admin';
 
   const promoCard = (p) => {
@@ -4846,10 +4890,15 @@ function renderPromosPage() {
         سعر الحزمة: <strong>${fmt(p.bundlePrice)} ج</strong>
         ${saving > 0 ? `<span style="color:var(--success); margin-right:8px;">وفر ${fmt(saving)} ج</span>` : ''}
       </div>`;
-    } else {
+    } else if (p.type === 'threshold') {
       const discLabel = p.discountType === 'percent' ? `${p.discountValue}%` : `${fmt(p.discountValue)} ج`;
       detail = `<div style="font-size:13px; margin-top:6px;">عند فاتورة ≥ <strong>${fmt(p.minAmount)} ج</strong> — خصم <strong>${discLabel}</strong></div>`;
+    } else if (p.type === 'category') {
+      detail = `<div style="font-size:13px; margin-top:6px;">خصم <strong>${p.categoryDisc}%</strong> على فئة: <strong>${p.categoryName}</strong></div>`;
+    } else if (p.type === 'bxgy') {
+      detail = `<div style="font-size:13px; margin-top:6px;">اشتري <strong>${p.buyQty}</strong> من ${(p.items||[]).map(i=>i.name).join('+')} — خد <strong>${p.getQty}</strong> مجاناً</div>`;
     }
+    const dateRange = (p.startDate || p.endDate) ? `<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">📅 ${p.startDate||'—'} → ${p.endDate||'—'}</div>` : '';
     return `<div style="border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; opacity:${p.active ? 1 : 0.55};">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
         <div style="flex:1;">
@@ -4857,7 +4906,7 @@ function renderPromosPage() {
             ${p.active ? '<span style="background:#d1fae5; color:#065f46; font-size:11px; padding:2px 7px; border-radius:99px; margin-right:6px;">نشط</span>'
                        : '<span style="background:#f3f4f6; color:#6b7280; font-size:11px; padding:2px 7px; border-radius:99px; margin-right:6px;">متوقف</span>'}
           </div>
-          ${detail}
+          ${detail}${dateRange}
         </div>
         ${canEdit ? `<div style="display:flex; gap:6px; flex-shrink:0;">
           <button class="btn btn-sm ${p.active ? 'btn-gray' : 'btn-success'}" onclick="togglePromoActive(${p.id})">${p.active ? 'إيقاف' : 'تفعيل'}</button>
@@ -4872,6 +4921,10 @@ function renderPromosPage() {
   const tEl = document.getElementById('thresholdsBody');
   if (bEl) bEl.innerHTML = bundles.length ? bundles.map(promoCard).join('') : '<div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد حزم بعد</div>';
   if (tEl) tEl.innerHTML = thresholds.length ? thresholds.map(promoCard).join('') : '<div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد خصومات بعد</div>';
+  const cEl = document.getElementById('categoriesBody');
+  const xEl = document.getElementById('bxgyBody');
+  if (cEl) cEl.innerHTML = categories.length ? categories.map(promoCard).join('') : '<div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد خصومات فئات بعد</div>';
+  if (xEl) xEl.innerHTML = bxgys.length ? bxgys.map(promoCard).join('') : '<div style="text-align:center; padding:24px; color:var(--text-muted);">لا توجد عروض اشتري وخد بعد</div>';
   // Admin-only: hide add button if cashier
   const addBtn = document.getElementById('addPromoBtn');
   if (addBtn) addBtn.style.display = currentUser === 'admin' ? '' : 'none';
@@ -4891,6 +4944,22 @@ function calcPromoDiscount(promo) {
     if (promo.discountType === 'percent') return Math.min(sub * promo.discountValue / 100, sub);
     return Math.min(promo.discountValue, sub);
   }
+  if (promo.type === 'category') {
+    const disc = cart.filter(i => (i.category||i.name||'').toLowerCase().includes((promo.categoryName||'').toLowerCase()))
+      .reduce((s,i) => s + i.price * i.qty * promo.categoryDisc / 100, 0);
+    return Math.max(0, disc);
+  }
+  if (promo.type === 'bxgy') {
+    const allMatch = (promo.items||[]).every(bi => {
+      const ci = cart.find(c => c.code === bi.code);
+      return ci && ci.qty >= (promo.buyQty || 1);
+    });
+    if (!allMatch) return 0;
+    return (promo.items||[]).reduce((s,bi) => {
+      const ci = cart.find(c => c.code === bi.code);
+      return s + (ci ? ci.price * (promo.getQty||1) : 0);
+    }, 0);
+  }
   return 0;
 }
 
@@ -4900,6 +4969,10 @@ function detectEligiblePromos() {
   return getPromos().filter(promo => {
     if (!promo.active) return false;
     if (applied.has(promo.id)) return false;
+    // date range check
+    const today = new Date().toISOString().slice(0,10);
+    if (promo.startDate && today < promo.startDate) return false;
+    if (promo.endDate   && today > promo.endDate)   return false;
     if (promo.type === 'bundle') {
       return (promo.items || []).every(bi => {
         const ci = cart.find(c => c.code === bi.code);
@@ -4907,6 +4980,13 @@ function detectEligiblePromos() {
       });
     }
     if (promo.type === 'threshold') return sub >= promo.minAmount;
+    if (promo.type === 'category')  return cart.some(i => (i.category||i.name||'').toLowerCase().includes((promo.categoryName||'').toLowerCase()));
+    if (promo.type === 'bxgy') {
+      return (promo.items||[]).every(bi => {
+        const ci = cart.find(c => c.code === bi.code);
+        return ci && ci.qty >= (promo.buyQty||1);
+      });
+    }
     return false;
   });
 }
@@ -4964,11 +5044,13 @@ function renderCustomers() {
   const thresh = _settingsCache.vipThreshold || 1000;
   const items = q ? custs.filter(c => c.name.toLowerCase().includes(q) || (c.phone||'').includes(q)) : custs;
 
-  const vipCount   = custs.filter(c => (c.totalSpent||0) >= thresh).length;
+  const vipCount   = custs.filter(c => (c.totalSpent||0) >= 5000).length;
   const totalSpent = custs.reduce((s,c) => s + (c.totalSpent||0), 0);
+  const totalPts   = custs.reduce((s,c) => s + (c.loyaltyPoints||0), 0);
   const countEl = document.getElementById('cust-count'); if (countEl) countEl.textContent = custs.length;
   const vipEl   = document.getElementById('cust-vip');   if (vipEl)   vipEl.textContent   = vipCount;
   const spentEl = document.getElementById('cust-spent'); if (spentEl) spentEl.textContent = fmt(totalSpent)+' ج';
+  const ptsEl   = document.getElementById('cust-pts');   if (ptsEl)   ptsEl.textContent   = totalPts+' نقطة';
 
   const tbody = document.getElementById('customersBody'); if (!tbody) return;
   if (!items.length) {
@@ -4976,16 +5058,24 @@ function renderCustomers() {
     return;
   }
   tbody.innerHTML = items.map(c => {
-    const isVip = (c.totalSpent||0) >= thresh;
+    const spent = c.totalSpent || 0;
+    const pts   = c.loyaltyPoints || 0;
+    let tier, tierColor, tierBg;
+    if (spent >= 20000)      { tier='💎 بلاتيني'; tierColor='#4c1d95'; tierBg='#ede9fe'; }
+    else if (spent >= 5000)  { tier='🥇 ذهبي';   tierColor='#78350f'; tierBg='#fef3c7'; }
+    else if (spent >= 1000)  { tier='🥈 فضي';    tierColor='#1e3a5f'; tierBg='#dbeafe'; }
+    else                     { tier='🥉 برونزي';  tierColor='#4b3320'; tierBg='#fde8d0'; }
     return `<tr>
-      <td><strong>${c.name}</strong></td>
+      <td><strong style="cursor:pointer;color:var(--primary);" onclick="openCustomerProfile('${c.id}')">${c.name}</strong></td>
       <td>${c.phone||'-'}</td>
       <td>${c.visits||0}</td>
-      <td>${fmt(c.totalSpent||0)} ج</td>
-      <td>${isVip ? '<span class="vip-badge">⭐ VIP</span>' : '<span class="badge badge-gray">عادي</span>'}</td>
+      <td>${fmt(spent)} ج</td>
+      <td><span style="font-weight:700;color:#059669;">${pts} نقطة</span></td>
+      <td><span style="background:${tierBg};color:${tierColor};padding:2px 8px;border-radius:20px;font-size:11px;">${tier}</span></td>
       <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString('ar-EG') : '-'}</td>
       <td>
-        <button class="btn btn-gray btn-sm" onclick="openCustomerModal('${c.id}')" style="margin-left:4px;">✏️</button>
+        <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;" onclick="openCustomerProfile('${c.id}')" title="الملف الكامل">👁️</button>
+        <button class="btn btn-gray btn-sm" onclick="openCustomerModal('${c.id}')" style="margin:0 3px;">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${c.id}')">🗑️</button>
       </td>
     </tr>`;
@@ -5036,6 +5126,86 @@ function deleteCustomer(id) {
   setCustomers(getCustomers().filter(c => c.id !== id));
   renderCustomers();
 }
+
+function openCustomerProfile(id) {
+  const c = getCustomers().find(x => x.id === id);
+  if (!c) return;
+  const allSales = getSales().filter(s => !s.isReturn && (s.customerId === id || s.customerPhone === c.phone));
+  const spent  = allSales.reduce((a,s) => a+s.total, 0);
+  const visits = allSales.length;
+  const pts    = c.loyaltyPoints || 0;
+  const loyDisc = calcLoyaltyRedemption(pts);
+
+  // tier
+  let tier, tierColor, tierBg;
+  if (spent >= 20000)      { tier='💎 بلاتيني'; tierColor='#4c1d95'; tierBg='#ede9fe'; }
+  else if (spent >= 5000)  { tier='🥇 ذهبي';   tierColor='#78350f'; tierBg='#fef3c7'; }
+  else if (spent >= 1000)  { tier='🥈 فضي';    tierColor='#1e3a5f'; tierBg='#dbeafe'; }
+  else                     { tier='🥉 برونزي';  tierColor='#4b3320'; tierBg='#fde8d0'; }
+
+  // top products
+  const prodMap = {};
+  allSales.forEach(s => (s.items||[]).forEach(i => {
+    prodMap[i.name] = (prodMap[i.name]||0) + i.qty;
+  }));
+  const topProds = Object.entries(prodMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const lastSale = allSales.sort((a,b)=>b.id-a.id)[0];
+
+  const el = document.getElementById('custProfileModal');
+  document.getElementById('cpBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <div style="width:54px;height:54px;border-radius:50%;background:#1a5faf;color:white;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0;">
+        ${c.name.charAt(0).toUpperCase()}
+      </div>
+      <div>
+        <div style="font-size:18px;font-weight:700;">${c.name}</div>
+        <div style="font-size:13px;color:var(--text-muted);">${c.phone||'لا يوجد هاتف'}</div>
+        <span style="background:${tierBg};color:${tierColor};padding:2px 10px;border-radius:20px;font-size:12px;margin-top:4px;display:inline-block;">${tier}</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+      ${[
+        {label:'إجمالي الإنفاق', val:fmt(spent)+' ج', bg:'#dcfce7', tc:'#15803d'},
+        {label:'عدد الزيارات',   val:visits,           bg:'#eff6ff', tc:'#1d4ed8'},
+        {label:'نقاط الولاء',    val:pts+' نقطة',      bg:'#fef9c3', tc:'#854d0e'},
+        {label:'قيمة النقاط',    val:fmt(loyDisc)+' ج',bg:'#fce7f3', tc:'#9d174d'},
+      ].map(k=>`<div style="background:${k.bg};border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:16px;font-weight:700;color:${k.tc};">${k.val}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${k.label}</div>
+      </div>`).join('')}
+    </div>
+
+    ${topProds.length ? `
+    <div style="background:var(--bg-secondary);border-radius:8px;padding:12px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">🏆 أكثر المنتجات شراءً</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${topProds.map(([name,qty],i)=>`<span style="background:white;border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;">${i+1}. ${name} <strong style="color:var(--primary);">×${qty}</strong></span>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${c.notes ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:14px;font-size:13px;">📝 ${c.notes}</div>` : ''}
+
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;">🧾 آخر الفواتير</div>
+    <div style="max-height:220px;overflow-y:auto;">
+      ${allSales.slice(0,20).map(s=>{
+        const d = new Date(s.date).toLocaleDateString('ar-EG');
+        const t = new Date(s.date).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+        const preview = (s.items||[]).slice(0,2).map(i=>i.name).join('، ');
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:6px;background:var(--bg-secondary);margin-bottom:4px;gap:8px;">
+          <div>
+            <span style="font-size:12px;font-weight:700;color:var(--primary);">#${String(s.id).slice(-6)}</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-inline-start:6px;">${d} ${t}</span>
+            <div style="font-size:11px;color:var(--text-muted);">${preview}</div>
+          </div>
+          <span style="font-weight:700;font-size:13px;flex-shrink:0;">${fmt(s.total)} ج</span>
+        </div>`;
+      }).join('') || '<p style="text-align:center;color:var(--text-muted);padding:20px;">لا توجد فواتير</p>'}
+    </div>
+  `;
+  el.classList.remove('hidden');
+}
+
 
 // ── Customer search in payment modal ──
 let _custDDTimer = null;
@@ -6007,6 +6177,65 @@ function printBarcodes() {
 }
 
 
+
+// ══════════════════════════════════════════════
+// LOYALTY PROGRAM
+// ══════════════════════════════════════════════
+let _loyaltyCache = null;
+
+function getLoyalty() {
+  if (!_loyaltyCache) {
+    const stored = DB.g('pos_loyalty');
+    _loyaltyCache = stored || { pointsPerEGP: 10, pointValue: 0.5, enabled: true };
+  }
+  return _loyaltyCache;
+}
+
+function setLoyalty(cfg) {
+  _loyaltyCache = cfg;
+  DB.s('pos_loyalty', cfg);
+  try { _db && _db.collection('pos_data').doc('loyalty').set({ cfg, updatedAt: Date.now() }); } catch(e) {}
+}
+
+// Award points to customer after sale
+function awardLoyaltyPoints(customerId, saleTotal) {
+  const cfg = getLoyalty();
+  if (!cfg.enabled || !customerId) return;
+  const pts = Math.floor(saleTotal / cfg.pointsPerEGP);
+  if (pts <= 0) return;
+  const list = getCustomers();
+  const c = list.find(x => x.id === customerId);
+  if (!c) return;
+  c.loyaltyPoints = (c.loyaltyPoints || 0) + pts;
+  setCustomers(list);
+}
+
+// Redeem points: returns discount amount in EGP
+function calcLoyaltyRedemption(points) {
+  return points * getLoyalty().pointValue;
+}
+
+// Cart loyalty redemption state
+let _cartLoyaltyRedeem = 0;
+
+function openLoyaltySettings() {
+  const cfg = getLoyalty();
+  document.getElementById('loyPtsPerEGP').value  = cfg.pointsPerEGP;
+  document.getElementById('loyPointValue').value = cfg.pointValue;
+  document.getElementById('loyEnabled').checked  = cfg.enabled;
+  document.getElementById('loyaltySettingsModal').classList.remove('hidden');
+}
+
+function saveLoyaltySettings() {
+  setLoyalty({
+    pointsPerEGP: parseFloat(document.getElementById('loyPtsPerEGP').value) || 10,
+    pointValue:   parseFloat(document.getElementById('loyPointValue').value) || 0.5,
+    enabled: document.getElementById('loyEnabled').checked
+  });
+  document.getElementById('loyaltySettingsModal').classList.add('hidden');
+  alert('تم حفظ إعدادات الولاء ✓');
+}
+// ══════════════════════════════════════════════
 </script>
 
 <!-- ===================== CUSTOMER MODAL ===================== -->
@@ -6228,5 +6457,138 @@ function printBarcodes() {
   </div>
 </div>
 
+
+<!-- ===================== PROMO MODAL ===================== -->
+<div id="promoModal" class="modal-overlay hidden">
+  <div class="modal" style="width:560px;max-height:88vh;overflow-y:auto;">
+    <h2 id="promoModalTitle">إضافة عرض جديد</h2>
+    <div class="form-group">
+      <label>اسم العرض</label>
+      <input class="form-control" id="promoName" placeholder="مثال: عرض رمضان" />
+    </div>
+    <div class="form-group">
+      <label>نوع العرض</label>
+      <select class="form-control" id="promoType" onchange="togglePromoTypeUI()">
+        <option value="bundle">📦 حزمة منتجات (Bundle)</option>
+        <option value="threshold">💰 خصم بحد أدنى للفاتورة</option>
+        <option value="category">🏷️ خصم على فئة منتجات</option>
+        <option value="bxgy">🎁 اشتري X خد Y مجاناً</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div class="form-group" style="margin:0;">
+        <label>تاريخ البداية (اختياري)</label>
+        <input class="form-control" type="date" id="promoStartDate" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>تاريخ الانتهاء (اختياري)</label>
+        <input class="form-control" type="date" id="promoEndDate" />
+      </div>
+    </div>
+    <!-- Bundle section -->
+    <div id="bundleSection">
+      <div class="form-group">
+        <label>البحث عن منتج للإضافة</label>
+        <div style="position:relative;">
+          <input class="form-control" id="promoProdSearch" placeholder="🔍 اسم أو كود المنتج..." oninput="addPromoProductSearch()" />
+          <div id="promoProdDropdown" class="hidden" style="position:absolute;top:100%;right:0;left:0;background:white;border:1px solid var(--border);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+        </div>
+      </div>
+      <div id="promoBundleItemsList" style="margin-bottom:10px;"></div>
+      <div class="form-group">
+        <label>سعر الحزمة الكلي (ج)</label>
+        <input class="form-control" type="number" id="promoBundlePrice" placeholder="0.00" min="0" />
+      </div>
+    </div>
+    <!-- Threshold section -->
+    <div id="thresholdSection" class="hidden">
+      <div class="form-group">
+        <label>الحد الأدنى للفاتورة (ج)</label>
+        <input class="form-control" type="number" id="promoMinAmount" placeholder="مثال: 500" min="0" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group" style="margin:0;">
+          <label>نوع الخصم</label>
+          <select class="form-control" id="promoDiscType">
+            <option value="percent">نسبة %</option>
+            <option value="fixed">مبلغ ثابت ج</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>قيمة الخصم</label>
+          <input class="form-control" type="number" id="promoDiscValue" placeholder="10" min="0" />
+        </div>
+      </div>
+    </div>
+    <!-- Category section -->
+    <div id="categorySection" class="hidden">
+      <div class="form-group">
+        <label>اسم الفئة (أو جزء من اسم المنتج)</label>
+        <input class="form-control" id="promoCatName" placeholder="مثال: أثاث — أو اتركه فارغاً لكل المنتجات" />
+      </div>
+      <div class="form-group">
+        <label>نسبة الخصم %</label>
+        <input class="form-control" type="number" id="promoCatDisc" placeholder="مثال: 15" min="1" max="100" />
+      </div>
+    </div>
+    <!-- Buy X Get Y section -->
+    <div id="bxgySection" class="hidden">
+      <div style="background:#fef9c3;border-radius:6px;padding:8px 12px;font-size:12px;color:#854d0e;margin-bottom:10px;">
+        💡 أضف المنتج من قسم الحزمة أعلاه — يستخدم نفس قائمة المنتجات
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group" style="margin:0;">
+          <label>الكمية المطلوب شراؤها</label>
+          <input class="form-control" type="number" id="promoBuyQty" value="2" min="1" />
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>الكمية المجانية</label>
+          <input class="form-control" type="number" id="promoGetQty" value="1" min="1" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="document.getElementById('promoModal').classList.add('hidden')">إلغاء</button>
+      <button class="btn btn-primary" onclick="savePromo()">💾 حفظ العرض</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CUSTOMER PROFILE MODAL ===================== -->
+<div id="custProfileModal" class="modal-overlay hidden">
+  <div class="modal" style="width:620px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h2 style="margin:0;">👤 ملف العميل</h2>
+      <button class="btn btn-gray btn-sm" onclick="document.getElementById('custProfileModal').classList.add('hidden')">✕ إغلاق</button>
+    </div>
+    <div id="cpBody"></div>
+  </div>
+</div>
+
+<!-- ===================== LOYALTY SETTINGS MODAL ===================== -->
+<div id="loyaltySettingsModal" class="modal-overlay hidden">
+  <div class="modal" style="width:440px;">
+    <h2>🎯 إعدادات برنامج الولاء</h2>
+    <div style="background:#eff6ff;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:#1e40af;">
+      مثال: كل 10 ج = 1 نقطة، وكل نقطة = 0.5 ج خصم<br>عميل اشترى بـ 500 ج → يكسب 50 نقطة = 25 ج خصم في المرة الجاية
+    </div>
+    <div class="form-group">
+      <label>كم جنيه = 1 نقطة؟</label>
+      <input class="form-control" type="number" id="loyPtsPerEGP" value="10" min="1" />
+    </div>
+    <div class="form-group">
+      <label>قيمة النقطة الواحدة (ج)</label>
+      <input class="form-control" type="number" id="loyPointValue" value="0.5" min="0.1" step="0.1" />
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="loyEnabled" checked style="width:18px;height:18px;" />
+      <label for="loyEnabled" style="margin:0;cursor:pointer;">تفعيل برنامج الولاء</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="document.getElementById('loyaltySettingsModal').classList.add('hidden')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveLoyaltySettings()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
