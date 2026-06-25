@@ -813,16 +813,20 @@ body.pos-fullscreen #cartFab { z-index:700; }
             <button class="btn btn-outline" onclick="exportInventoryExcel()">📥 تصدير Excel</button>
             <button class="btn btn-outline" onclick="openBarcodeModal()">🏷️ طباعة باركود / أسعار</button>
           </div>
-          <input class="search-input" id="invSearch" placeholder="🔍 بحث..." oninput="renderInventory()" style="width:220px;" />
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input class="search-input" id="invSearch" placeholder="🔍 بحث..." oninput="renderInventory()" style="width:180px;" />
+            <select class="form-control" id="invCatFilter" onchange="renderInventory()" style="width:auto;font-size:13px;"><option value="">كل الفئات</option></select>
+            <select class="form-control" id="invFamFilter" onchange="renderInventory()" style="width:auto;font-size:13px;"><option value="">كل المجموعات</option></select>
+          </div>
         </div>
         <div id="importAlert"></div>
         <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px; padding:10px; background:white; border-radius:8px; border:1px solid var(--border);">
-          📋 <strong>أعمدة Excel المطلوبة:</strong> code · name · cost · price before · price after · qty (أو باللغة العربية)
+          📋 <strong>أعمدة Excel المطلوبة:</strong> code · name · cost · price before · price after · qty · <span style='color:#1d4ed8;'>category · family</span> (أو باللغة العربية)
         </div>
         <div class="card">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>الكود</th><th>الاسم</th><th>التكلفة</th><th>السعر قبل</th><th>السعر بعد</th><th>الكمية</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+              <thead><tr><th>الكود</th><th>الاسم</th><th>الفئة</th><th>المجموعة</th><th>التكلفة</th><th>السعر قبل</th><th>السعر بعد</th><th>الكمية</th><th>الحالة</th><th>إجراءات</th></tr></thead>
               <tbody id="inventoryBody"></tbody>
             </table>
           </div>
@@ -1089,12 +1093,14 @@ body.pos-fullscreen #cartFab { z-index:700; }
         <!-- ══ VLOOKUP SECTION ══ -->
         <div style="margin-top:24px;">
           <h3 style="font-size:16px;font-weight:800;margin-bottom:12px;">🔗 تقارير ربط الجداول (VLOOKUP)</h3>
-          <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-secondary);padding:4px;border-radius:10px;width:fit-content;">
-            <button id="vlTab_supplier" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;background:white;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);" onclick="showVLTab('supplier')">🏭 الموردين × الإيراد</button>
-            <button id="vlTab_customer" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="showVLTab('customer')">👥 فئات العملاء × المنتجات</button>
-            <button id="vlTab_turnover" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="showVLTab('turnover')">🔄 دوران المخزون</button>
+          <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-secondary);padding:4px;border-radius:10px;flex-wrap:wrap;">
+            <button id="vlTab_supplier" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;background:white;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);" onclick="showVLTab('supplier')">🏭 الموردين × الإيراد</button>
+            <button id="vlTab_catreport" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;" onclick="showVLTab('catreport')">🏷️ تقرير الفئات والمجموعات</button>
+            <button id="vlTab_customer" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;" onclick="showVLTab('customer')">👥 فئات العملاء × المنتجات</button>
+            <button id="vlTab_turnover" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;" onclick="showVLTab('turnover')">🔄 دوران المخزون</button>
           </div>
           <div id="vlPane_supplier"></div>
+          <div id="vlPane_catreport" class="hidden"></div>
           <div id="vlPane_customer" class="hidden"></div>
           <div id="vlPane_turnover" class="hidden"></div>
         </div>
@@ -1731,6 +1737,16 @@ body.pos-fullscreen #cartFab { z-index:700; }
       <div class="form-group"><label>السعر قبل (اختياري)</label><input class="form-control" type="number" id="pm-priceBefore" placeholder="0.00" min="0" /></div>
       <div class="form-group"><label>السعر بعد *</label><input class="form-control" type="number" id="pm-priceAfter" placeholder="0.00" min="0" /></div>
       <div class="form-group"><label>الكمية</label><input class="form-control" type="number" id="pm-qty" placeholder="0" min="0" /></div>
+      <div class="form-group">
+        <label>الفئة (Category)</label>
+        <input class="form-control" id="pm-category" placeholder="مثال: أثاث" list="categoryList" autocomplete="off" />
+        <datalist id="categoryList"></datalist>
+      </div>
+      <div class="form-group">
+        <label>المجموعة (Family)</label>
+        <input class="form-control" id="pm-family" placeholder="مثال: كراسي" list="familyList" autocomplete="off" />
+        <datalist id="familyList"></datalist>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-gray" onclick="document.getElementById('productModal').classList.add('hidden')">إلغاء</button>
@@ -2285,7 +2301,7 @@ function showPage(page) {
   if (page === 'dashboard')  buildDashboard();
   if (page === 'inventory')  renderInventory();
   if (page === 'sales')      { initSalesFilter(); renderSales(); }
-  if (page === 'reports')    { buildSalesReport(); setTimeout(()=>showVLTab('supplier'),100); }
+  if (page === 'reports')    { buildSalesReport(); setTimeout(()=>showVLTab('catreport'),100); }
   if (page === 'suspended')  renderSuspendedPage();
   if (page === 'settings')   { renderSellersSettings(); renderLastBackupInfo(); document.getElementById('sVipThreshold').value = _settingsCache.vipThreshold || 1000; populateBranchNameInputs(); renderBranchUsersSettings(); }
   if (page === 'customers')  renderCustomers();
@@ -2527,13 +2543,24 @@ function buildDashboard() {
 function renderInventory() {
   const q = (document.getElementById('invSearch')?.value || '').toLowerCase();
   const inv = getInv(), thresh = getThreshold();
-  const items = q ? inv.filter(p => p.name.toLowerCase().includes(q)||p.code.toLowerCase().includes(q)) : inv;
+  const catFilter = document.getElementById('invCatFilter')?.value || '';
+  const famFilter = document.getElementById('invFamFilter')?.value || '';
+  let items = inv;
+  if (q)         items = items.filter(p => p.name.toLowerCase().includes(q)||p.code.toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q)||(p.family||'').toLowerCase().includes(q));
+  if (catFilter) items = items.filter(p => (p.category||'') === catFilter);
+  if (famFilter) items = items.filter(p => (p.family||'') === famFilter);
+  const _cf = document.getElementById('invCatFilter');
+  const _ff = document.getElementById('invFamFilter');
+  if (_cf) { const _cv=_cf.value; const _cats=[...new Set(inv.map(x=>x.category).filter(Boolean))].sort(); _cf.innerHTML='<option value="">كل الفئات</option>'+_cats.map(c=>`<option value="${c}" ${c===_cv?'selected':''}>${c}</option>`).join(''); _cf.value=_cv; }
+  if (_ff) { const _fv=_ff.value; const _fams=[...new Set(inv.map(x=>x.family).filter(Boolean))].sort(); _ff.innerHTML='<option value="">كل المجموعات</option>'+_fams.map(f=>`<option value="${f}" ${f===_fv?'selected':''}>${f}</option>`).join(''); _ff.value=_fv; }
 
   document.getElementById('inventoryBody').innerHTML = !items.length
-    ? '<tr><td colspan="8" class="text-center text-muted" style="padding:40px;">لا توجد منتجات</td></tr>'
+    ? '<tr><td colspan="10" class="text-center text-muted" style="padding:40px;">لا توجد منتجات</td></tr>'
     : items.map(p => `<tr>
         <td><strong>${p.code}</strong></td>
         <td>${p.name}</td>
+        <td><span style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:11px;">${p.category||'—'}</span></td>
+        <td><span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:12px;font-size:11px;">${p.family||'—'}</span></td>
         <td>${fmt(p.cost||0)}</td>
         <td>${p.priceBefore ? fmt(p.priceBefore) : '-'}</td>
         <td><strong>${fmt(p.priceAfter)}</strong></td>
@@ -2565,6 +2592,14 @@ function openProductModal(p) {
   document.getElementById('pm-priceBefore').value = p ? (p.priceBefore||'') : '';
   document.getElementById('pm-priceAfter').value  = p ? p.priceAfter : '';
   document.getElementById('pm-qty').value         = p ? p.qty : '';
+  document.getElementById('pm-category').value    = p ? (p.category||'') : '';
+  document.getElementById('pm-family').value      = p ? (p.family||'') : '';
+  const _allCats = [...new Set(getInv().map(x=>x.category).filter(Boolean))];
+  const _allFams = [...new Set(getInv().map(x=>x.family).filter(Boolean))];
+  const _clEl = document.getElementById('categoryList');
+  const _flEl = document.getElementById('familyList');
+  if (_clEl) _clEl.innerHTML = _allCats.map(c=>`<option value="${c}">`).join('');
+  if (_flEl) _flEl.innerHTML = _allFams.map(f=>`<option value="${f}">`).join('');
   document.getElementById('productModal').classList.remove('hidden');
 }
 
@@ -2586,7 +2621,9 @@ function saveProduct() {
     cost:       parseFloat(document.getElementById('pm-cost').value) || 0,
     priceBefore: parseFloat(document.getElementById('pm-priceBefore').value) || 0,
     priceAfter,
-    qty: parseInt(document.getElementById('pm-qty').value) || 0
+    qty:      parseInt(document.getElementById('pm-qty').value) || 0,
+    category: document.getElementById('pm-category').value.trim(),
+    family:   document.getElementById('pm-family').value.trim()
   };
 
   if (editCode) {
@@ -2644,7 +2681,9 @@ function importExcel(e) {
         cost:        parseFloat(g('cost','التكلفة','تكلفة','buy price','buying price','purchase price','سعر الشراء')||0)||0,
         priceBefore: parseFloat(g('price before','price_before','pricebefore','السعر قبل','سعر قبل','old price')||0)||0,
         priceAfter,
-        qty: parseInt(g('qty','quantity','الكمية','كمية','stock','مخزون')||0)||0
+        qty:      parseInt(g('qty','quantity','الكمية','كمية','stock','مخزون')||0)||0,
+        category: String(g('category','الفئة','فئة','كاتيجورى','كاتيجوري','')||'').trim(),
+        family:   String(g('family','المجموعة','مجموعة','فاميلى','فاميلي','')||'').trim()
       };
       const ex = inv.find(x => x.code === code);
       if (ex) { Object.assign(ex, prod); updated++; } else { inv.push(prod); added++; }
@@ -6693,13 +6732,14 @@ let _vlTab = 'supplier';
 
 function showVLTab(tab) {
   _vlTab = tab;
-  ['supplier','customer','turnover'].forEach(function(t) {
+  ['supplier','catreport','customer','turnover'].forEach(function(t) {
     var btn  = document.getElementById('vlTab_'+t);
     var pane = document.getElementById('vlPane_'+t);
     if (btn)  { btn.style.background = t===tab?'white':''; btn.style.fontWeight = t===tab?'700':'400'; btn.style.boxShadow = t===tab?'0 1px 4px rgba(0,0,0,.1)':''; }
     if (pane) pane.classList.toggle('hidden', t!==tab);
   });
   if (tab==='supplier')  renderSupplierAnalysis();
+  if (tab==='catreport') renderCategoryReport();
   if (tab==='customer')  renderCustomerProductMatrix();
   if (tab==='turnover')  renderInventoryTurnover();
 }
@@ -6853,6 +6893,82 @@ function renderInventoryTurnover() {
   });
   html2+='</tbody></table></div>';
   pane.innerHTML=html2;
+}
+
+// ── Category / Family Sales Report ────────────────────────────────
+function renderCategoryReport() {
+  var pane = document.getElementById('vlPane_catreport');
+  if (!pane) return;
+  var products = (typeof getInventory==='function') ? getInventory() : DB.g('inventory',[]);
+  var allSales = getSales().filter(function(s){return !s.isReturn;});
+
+  // Build maps
+  var catMap = {}, famMap = {};
+  allSales.forEach(function(sale) {
+    (sale.items||[]).forEach(function(item) {
+      var prod = products.find(function(p){return p.code===item.code;});
+      var cat  = (prod&&prod.category) ? prod.category : (item.category||'غير محدد');
+      var fam  = (prod&&prod.family)   ? prod.family   : (item.family||'غير محدد');
+      var rev  = item.price * item.qty;
+      var cost = (item.cost||0) * item.qty;
+      var qty  = item.qty;
+      if (!catMap[cat]) catMap[cat] = {name:cat, revenue:0, cost:0, qty:0, items:{}};
+      catMap[cat].revenue += rev; catMap[cat].cost += cost; catMap[cat].qty += qty;
+      catMap[cat].items[item.name] = (catMap[cat].items[item.name]||0) + qty;
+      if (!famMap[fam]) famMap[fam] = {name:fam, revenue:0, cost:0, qty:0, items:{}};
+      famMap[fam].revenue += rev; famMap[fam].cost += cost; famMap[fam].qty += qty;
+      famMap[fam].items[item.name] = (famMap[fam].items[item.name]||0) + qty;
+    });
+  });
+
+  var totalRev = Object.values(catMap).reduce(function(s,x){return s+x.revenue;},0) || 1;
+
+  function buildTable(map, title, icon) {
+    var rows = Object.values(map).sort(function(a,b){return b.revenue-a.revenue;});
+    if (!rows.length) return '<p style="color:var(--text-muted);padding:12px;">لا توجد بيانات — تأكد من إضافة الفئة/المجموعة للمنتجات</p>';
+    var html2 = '<div style="font-size:14px;font-weight:700;margin:16px 0 10px;">'+icon+' '+title+'</div>';
+    html2 += '<div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:20px;">';
+    html2 += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    html2 += '<thead><tr style="background:var(--sidebar);color:white;">';
+    ['الاسم','الإيراد','التكلفة','هامش%','الكمية','% من الإجمالي','أعلى منتج'].forEach(function(h){html2+='<th style="padding:8px;text-align:center;">'+h+'</th>';});
+    html2 += '</tr></thead><tbody>';
+    rows.forEach(function(r,i) {
+      var margin = r.revenue>0 ? Math.round((r.revenue-r.cost)/r.revenue*100) : 0;
+      var pct    = Math.round(r.revenue/totalRev*100);
+      var topItem= Object.entries(r.items).sort(function(a,b){return b[1]-a[1];})[0];
+      var mg_bg  = margin>=30?'#dcfce7':margin>=15?'#fef9c3':'#fee2e2';
+      var mg_tc  = margin>=30?'#15803d':margin>=15?'#854d0e':'#b91c1c';
+      var rowBg  = i%2===0?'white':'#fafafa';
+      html2 += '<tr style="border-bottom:1px solid var(--border);background:'+rowBg+';">';
+      html2 += '<td style="padding:8px;font-weight:700;">'+r.name+'</td>';
+      html2 += '<td style="padding:8px;text-align:center;font-weight:700;color:#1d4ed8;">'+fmt(r.revenue)+' ج</td>';
+      html2 += '<td style="padding:8px;text-align:center;">'+fmt(r.cost)+' ج</td>';
+      html2 += '<td style="padding:8px;text-align:center;"><span style="background:'+mg_bg+';color:'+mg_tc+';padding:2px 8px;border-radius:12px;font-size:11px;">'+margin+'%</span></td>';
+      html2 += '<td style="padding:8px;text-align:center;">'+r.qty+'</td>';
+      html2 += '<td style="padding:8px;text-align:center;">';
+      html2 += '<div style="background:var(--bg-secondary);border-radius:4px;height:6px;margin-bottom:2px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+Math.min(pct,100)+'%;"></div></div>';
+      html2 += '<span style="font-size:11px;">'+pct+'%</span></td>';
+      html2 += '<td style="padding:8px;text-align:center;font-size:12px;">'+(topItem?topItem[0]+' (×'+topItem[1]+')':'-')+'</td>';
+      html2 += '</tr>';
+    });
+    html2 += '</tbody></table></div>';
+    return html2;
+  }
+
+  // KPI cards
+  var totalCost  = Object.values(catMap).reduce(function(s,x){return s+x.cost;},0);
+  var totalMargin= totalRev>0?Math.round((totalRev-totalCost)/totalRev*100):0;
+  var catCount   = Object.keys(catMap).length;
+  var famCount   = Object.keys(famMap).length;
+
+  var html2 = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">';
+  [{l:'إجمالي الإيراد',v:fmt(totalRev)+' ج',bg:'#eff6ff',tc:'#1d4ed8'},{l:'هامش الربح',v:totalMargin+'%',bg:'#dcfce7',tc:'#15803d'},{l:'عدد الفئات',v:catCount,bg:'#fef9c3',tc:'#854d0e'},{l:'عدد المجموعات',v:famCount,bg:'#fde8d0',tc:'#9a3412'}].forEach(function(k){
+    html2 += '<div style="background:'+k.bg+';border-radius:8px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:'+k.tc+';">'+k.v+'</div><div style="font-size:11px;color:var(--text-muted);">'+k.l+'</div></div>';
+  });
+  html2 += '</div>';
+  html2 += buildTable(catMap, 'تقرير حسب الفئة (Category)', '🏷️');
+  html2 += buildTable(famMap, 'تقرير حسب المجموعة (Family)', '📦');
+  pane.innerHTML = html2;
 }
 </script>
 
