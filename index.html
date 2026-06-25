@@ -627,6 +627,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
       <button class="nav-item"        data-page="transfers"  onclick="showPage('transfers')"><span class="nav-icon">🔄</span>التحويلات</button>
       <button class="nav-item"        data-page="purchases"  onclick="showPage('purchases')"><span class="nav-icon">🛒</span>المشتريات</button>
       <button class="nav-item"        data-page="hr"         onclick="showPage('hr')"><span class="nav-icon">👔</span>الموارد البشرية</button>
+      <button class="nav-item"        data-page="accounting" onclick="showPage('accounting')"><span class="nav-icon">🏦</span>المحاسبة</button>
       <button class="nav-item"        data-page="expenses"   onclick="showPage('expenses')"><span class="nav-icon">💸</span>المصاريف</button>
       <button class="nav-item"        data-page="audit"      onclick="showPage('audit')"><span class="nav-icon">🔍</span>سجل التغييرات</button>
       <button class="nav-item"        data-page="settings"   onclick="showPage('settings')"><span class="nav-icon">⚙️</span>الإعدادات</button>
@@ -1085,6 +1086,19 @@ body.pos-fullscreen #cartFab { z-index:700; }
           </div>
         </div>
 
+        <!-- ══ VLOOKUP SECTION ══ -->
+        <div style="margin-top:24px;">
+          <h3 style="font-size:16px;font-weight:800;margin-bottom:12px;">🔗 تقارير ربط الجداول (VLOOKUP)</h3>
+          <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-secondary);padding:4px;border-radius:10px;width:fit-content;">
+            <button id="vlTab_supplier" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;background:white;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);" onclick="showVLTab('supplier')">🏭 الموردين × الإيراد</button>
+            <button id="vlTab_customer" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="showVLTab('customer')">👥 فئات العملاء × المنتجات</button>
+            <button id="vlTab_turnover" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="showVLTab('turnover')">🔄 دوران المخزون</button>
+          </div>
+          <div id="vlPane_supplier"></div>
+          <div id="vlPane_customer" class="hidden"></div>
+          <div id="vlPane_turnover" class="hidden"></div>
+        </div>
+
       </div>
 
       <!-- ── SUSPENDED BILLS ── -->
@@ -1240,10 +1254,18 @@ body.pos-fullscreen #cartFab { z-index:700; }
         <div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:8px;">
           <div><h2 style="margin:0; font-size:20px;">👔 الموارد البشرية</h2><p style="font-size:12px; color:var(--text-muted); margin:4px 0 0;">أهداف البائعين والعمولات الشهرية</p></div>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <select class="form-control" id="hrMonthFilter" onchange="renderHRPage()" style="width:auto;"><option value="">الشهر الحالي</option></select>
+            <select class="form-control" id="hrMonthFilter" onchange="renderHRPage();if(_hrActiveTab==='attendance')renderAttendancePane();if(_hrActiveTab==='payroll')renderPayrollPane();" style="width:auto;"><option value="">الشهر الحالي</option></select>
             <button class="btn btn-primary" onclick="openHRTargetModal()">🎯 تحديد الأهداف</button>
           </div>
         </div>
+        <!-- HR Tabs -->
+        <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-secondary);padding:4px;border-radius:10px;width:fit-content;">
+          <button id="hrTab_targets" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;background:white;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);" onclick="switchHRTab('targets')">🎯 الأهداف والعمولات</button>
+          <button id="hrTab_attendance" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="switchHRTab('attendance')">📅 الحضور</button>
+          <button id="hrTab_payroll" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="switchHRTab('payroll')">💰 الرواتب</button>
+        </div>
+        <!-- Pane: Targets -->
+        <div id="hrPane_targets">
         <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); margin-bottom:16px;">
           <div class="stat-card"><div class="stat-label">🎯 إجمالي الأهداف</div><div class="stat-value" id="hr-total-target" style="font-size:22px;">0 ج</div></div>
           <div class="stat-card"><div class="stat-label">💰 إجمالي المبيعات</div><div class="stat-value" id="hr-total-sales" style="font-size:22px; color:var(--success);">0 ج</div></div>
@@ -1251,6 +1273,27 @@ body.pos-fullscreen #cartFab { z-index:700; }
           <div class="stat-card"><div class="stat-label">💸 إجمالي العمولات</div><div class="stat-value" id="hr-total-commission" style="font-size:22px; color:#7c3aed;">0 ج</div></div>
         </div>
         <div id="hrSalespeople"></div>
+        </div><!-- /hrPane_targets -->
+        <!-- Pane: Attendance -->
+        <div id="hrPane_attendance" class="hidden"></div>
+        <!-- Pane: Payroll -->
+        <div id="hrPane_payroll" class="hidden" style="overflow-x:auto;"></div>
+      </div>
+
+      <!-- ══ ACCOUNTING ══ -->
+      <div id="page-accounting" class="hidden">
+        <div class="flex items-center justify-between mb-16" style="flex-wrap:wrap;gap:8px;">
+          <div><h2 style="margin:0;font-size:20px;">🏦 المحاسبة الرسمية</h2><p style="font-size:12px;color:var(--text-muted);margin:4px 0 0;">قائمة الدخل • التدفق النقدي • الملخص السنوي</p></div>
+          <select class="form-control" id="accMonthFilter" onchange="renderAccTab(_accTab)" style="width:auto;"></select>
+        </div>
+        <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-secondary);padding:4px;border-radius:10px;width:fit-content;">
+          <button id="accTab_pnl"      class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;background:white;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);" onclick="switchAccTab('pnl')">📋 قائمة الدخل</button>
+          <button id="accTab_cashflow" class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="switchAccTab('cashflow')">💵 التدفق النقدي</button>
+          <button id="accTab_summary"  class="btn" style="font-size:13px;padding:6px 16px;border-radius:7px;" onclick="switchAccTab('summary')">📊 الملخص الكلي</button>
+        </div>
+        <div id="accPane_pnl"></div>
+        <div id="accPane_cashflow" class="hidden"></div>
+        <div id="accPane_summary"  class="hidden"></div>
       </div>
 
       <!-- ══ EXPENSES ══ -->
@@ -2231,18 +2274,18 @@ function closeModal(id) {
 // MANAGER PAGES
 // ══════════════════════════════════════════════
 function showPage(page) {
-  ['dashboard','inventory','sales','suspended','reports','settings','customers','promos','transfers','purchases','hr','expenses','audit'].forEach(p => {
+  ['dashboard','inventory','sales','suspended','reports','settings','customers','promos','transfers','purchases','hr','expenses','audit','accounting'].forEach(p => {
     document.getElementById('page-'+p)?.classList.add('hidden');
   });
   document.getElementById('page-'+page).classList.remove('hidden');
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-  const titles = { dashboard:'الرئيسية', inventory:'إدارة المخزون', sales:'سجل المبيعات', suspended:'فواتير معلقة', reports:'التقارير', settings:'الإعدادات', customers:'العملاء', purchases:'المشتريات', hr:'الموارد البشرية', expenses:'المصاريف', audit:'سجل التغييرات' };
+  const titles = { dashboard:'الرئيسية', inventory:'إدارة المخزون', sales:'سجل المبيعات', suspended:'فواتير معلقة', reports:'التقارير', settings:'الإعدادات', customers:'العملاء', purchases:'المشتريات', hr:'الموارد البشرية', expenses:'المصاريف', audit:'سجل التغييرات', accounting:'المحاسبة الرسمية' };
   document.getElementById('pageTitle').textContent = titles[page] || '';
   if (page === 'dashboard')  buildDashboard();
   if (page === 'inventory')  renderInventory();
   if (page === 'sales')      { initSalesFilter(); renderSales(); }
-  if (page === 'reports')    { buildSalesReport(); }
+  if (page === 'reports')    { buildSalesReport(); setTimeout(()=>showVLTab('supplier'),100); }
   if (page === 'suspended')  renderSuspendedPage();
   if (page === 'settings')   { renderSellersSettings(); renderLastBackupInfo(); document.getElementById('sVipThreshold').value = _settingsCache.vipThreshold || 1000; populateBranchNameInputs(); renderBranchUsersSettings(); }
   if (page === 'customers')  renderCustomers();
@@ -2250,6 +2293,7 @@ function showPage(page) {
   if (page === 'transfers')  renderTransfersPage();
   if (page === 'purchases')  renderPurchasesPage();
   if (page === 'hr')         renderHRPage();
+  if (page === 'accounting') renderAccountingPage();
   if (page === 'expenses')   renderExpensesPage();
   if (page === 'audit')      renderAuditPage();
 }
@@ -6236,6 +6280,580 @@ function saveLoyaltySettings() {
   alert('تم حفظ إعدادات الولاء ✓');
 }
 // ══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+// ATTENDANCE & PAYROLL
+// ══════════════════════════════════════════════
+let _attendanceCache = null;
+let _payrollCache    = null;
+
+function getAttendance() {
+  if (!_attendanceCache) _attendanceCache = DB.g('pos_attendance', []);
+  return _attendanceCache;
+}
+function setAttendance(list) {
+  _attendanceCache = list;
+  DB.s('pos_attendance', list);
+  try { _db && _db.collection('pos_data').doc('attendance').set({ list, updatedAt: Date.now() }); } catch(e) {}
+}
+function getPayroll() {
+  if (!_payrollCache) _payrollCache = DB.g('pos_payroll', []);
+  return _payrollCache;
+}
+function setPayroll(list) {
+  _payrollCache = list;
+  DB.s('pos_payroll', list);
+  try { _db && _db.collection('pos_data').doc('payroll').set({ list, updatedAt: Date.now() }); } catch(e) {}
+}
+
+function saveAttendanceRecord(empName, date, status, checkIn, checkOut, notes) {
+  const list = getAttendance();
+  const existing = list.find(a => a.empName === empName && a.date === date);
+  const rec = { id: existing?.id || Date.now(), empName, date, status, checkIn: checkIn||'', checkOut: checkOut||'', notes: notes||'' };
+  if (existing) Object.assign(existing, rec);
+  else list.push(rec);
+  setAttendance(list);
+}
+
+function savePayrollAdjustment(month, empName, bonus, deduction) {
+  const list = getPayroll();
+  const ex = list.find(p => p.month === month && p.empName === empName);
+  if (ex) { ex.bonus = bonus; ex.deduction = deduction; }
+  else list.push({ id: Date.now(), month, empName, bonus, deduction, isPaid: false });
+  setPayroll(list);
+}
+
+function markPayrollPaid(month, empName, isPaid) {
+  const list = getPayroll();
+  const ex = list.find(p => p.month === month && p.empName === empName);
+  if (ex) ex.isPaid = isPaid;
+  else list.push({ id: Date.now(), month, empName, bonus: 0, deduction: 0, isPaid });
+  setPayroll(list);
+}
+
+function calcMonthlyPayroll(month) {
+  const sps = (getSalespeople ? getSalespeople() : []);
+  const hrRec = getHR().find(h => h.month === month) || {};
+  const allSales = getSales().filter(s => !s.isReturn && s.date?.slice(0,7) === month);
+  const attMonth = getAttendance().filter(a => a.date?.slice(0,7) === month);
+  const stored   = getPayroll().filter(p => p.month === month);
+  return sps.map(sp => {
+    const name = typeof sp === 'string' ? sp : sp.name;
+    const base = typeof sp === 'object' ? (sp.baseSalary || 0) : 0;
+    const empSales  = allSales.filter(s => s.salesperson === name).reduce((s,x)=>s+x.total,0);
+    const commPct   = hrRec.targets?.[name]?.commission ?? 0;
+    const commission = Math.round(empSales * commPct / 100);
+    const workDays  = attMonth.filter(a => a.empName===name && a.status==='present').length;
+    const absentDays= attMonth.filter(a => a.empName===name && a.status==='absent').length;
+    const lateDays  = attMonth.filter(a => a.empName===name && a.status==='late').length;
+    const sr = stored.find(p => p.empName===name) || {};
+    const bonus = sr.bonus||0; const deduction = sr.deduction||0;
+    return { name, base, empSales, commPct, commission, workDays, absentDays, lateDays, bonus, deduction, net: base+commission+bonus-deduction, isPaid: sr.isPaid||false };
+  });
+}
+
+let _hrActiveTab = 'targets';
+function switchHRTab(tab) {
+  _hrActiveTab = tab;
+  ['targets','attendance','payroll'].forEach(t => {
+    const btn = document.getElementById('hrTab_'+t);
+    const pane = document.getElementById('hrPane_'+t);
+    if (btn)  { btn.style.background = t===tab?'white':''; btn.style.fontWeight = t===tab?'700':'400'; btn.style.boxShadow = t===tab?'0 1px 4px rgba(0,0,0,.1)':''; }
+    if (pane) pane.classList.toggle('hidden', t!==tab);
+  });
+  if (tab==='attendance') renderAttendancePane();
+  if (tab==='payroll')    renderPayrollPane();
+}
+
+function getHRMonth() {
+  return document.getElementById('hrMonthFilter')?.value || new Date().toISOString().slice(0,7);
+}
+
+function renderAttendancePane() {
+  const month = getHRMonth();
+  const sps = (getSalespeople?getSalespeople():[]).map(sp=>typeof sp==='string'?sp:sp.name);
+  const [yr, mo] = month.split('-').map(Number);
+  const daysInMonth = new Date(yr, mo, 0).getDate();
+  const today = new Date().toISOString().slice(0,10);
+  const attMap = {};
+  getAttendance().filter(a=>a.date?.slice(0,7)===month).forEach(a=>{ attMap[a.empName+'_'+a.date]=a; });
+  const SC = {present:'#dcfce7',absent:'#fee2e2',late:'#fef9c3',excused:'#eff6ff','':'#f3f4f6'};
+  const SL = {present:'✅',absent:'❌',late:'⏰',excused:'🔵','':'—'};
+
+  const summCards = sps.map(name => {
+    const p = Object.values(attMap).filter(a=>a.empName===name&&a.status==='present').length;
+    const ab= Object.values(attMap).filter(a=>a.empName===name&&a.status==='absent').length;
+    const lt= Object.values(attMap).filter(a=>a.empName===name&&a.status==='late').length;
+    return `<div style="background:var(--bg-secondary);border-radius:8px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <span style="font-weight:700;min-width:70px;">${name}</span>
+      <span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:12px;font-size:12px;">✅ ${p} حضور</span>
+      <span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:12px;font-size:12px;">❌ ${ab} غياب</span>
+      <span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:12px;font-size:12px;">⏰ ${lt} تأخير</span>
+    </div>`;
+  }).join('');
+
+  const recentDays = [];
+  for (let d = daysInMonth; d >= 1; d--) {
+    recentDays.push(`${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+
+  const rows = recentDays.map(ds => {
+    const cells = sps.map(name => {
+      const rec = attMap[name+'_'+ds];
+      const st = rec?.status||'';
+      return `<td style="background:${SC[st]};text-align:center;cursor:pointer;padding:8px 6px;border:1px solid var(--border);"
+        title="${rec?.checkIn||''} → ${rec?.checkOut||''}" onclick="openAttendanceEdit('${name}','${ds}')">${SL[st]}</td>`;
+    }).join('');
+    return `<tr><td style="font-size:12px;color:var(--text-muted);padding:6px 8px;white-space:nowrap;border:1px solid var(--border);">${ds.slice(5)}${ds===today?' 🔵':''}</td>${cells}</tr>`;
+  }).join('');
+
+  const pane = document.getElementById('hrPane_attendance');
+  if (!pane) return;
+  pane.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div style="font-weight:700;font-size:14px;">ملخص ${month}</div>
+      <button class="btn btn-primary btn-sm" onclick="openAttendanceEdit('','${today}')">➕ تسجيل حضور</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">${summCards}</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr>
+          <th style="padding:6px 8px;background:var(--bg-secondary);border:1px solid var(--border);">التاريخ</th>
+          ${sps.map(n=>`<th style="padding:6px 8px;background:var(--bg-secondary);text-align:center;border:1px solid var(--border);">${n}</th>`).join('')}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function openAttendanceEdit(empName, date) {
+  const sps = (getSalespeople?getSalespeople():[]).map(sp=>typeof sp==='string'?sp:sp.name);
+  const existing = getAttendance().find(a=>a.empName===empName&&a.date===date);
+  document.getElementById('attEmpSelect').innerHTML = sps.map(n=>`<option value="${n}" ${n===empName?'selected':''}>${n}</option>`).join('');
+  document.getElementById('attDate').value     = date;
+  document.getElementById('attStatus').value   = existing?.status||'present';
+  document.getElementById('attCheckIn').value  = existing?.checkIn||'';
+  document.getElementById('attCheckOut').value = existing?.checkOut||'';
+  document.getElementById('attNotes').value    = existing?.notes||'';
+  document.getElementById('attendanceEditModal').classList.remove('hidden');
+}
+
+function saveAttendanceEdit() {
+  const emp    = document.getElementById('attEmpSelect').value;
+  const date   = document.getElementById('attDate').value;
+  if (!emp||!date) { alert('اختر الموظف والتاريخ'); return; }
+  saveAttendanceRecord(emp, date,
+    document.getElementById('attStatus').value,
+    document.getElementById('attCheckIn').value,
+    document.getElementById('attCheckOut').value,
+    document.getElementById('attNotes').value);
+  document.getElementById('attendanceEditModal').classList.add('hidden');
+  renderAttendancePane();
+}
+
+function renderPayrollPane() {
+  const month = getHRMonth();
+  const payroll = calcMonthlyPayroll(month);
+  const pane = document.getElementById('hrPane_payroll');
+  if (!pane) return;
+  if (!payroll.length) { pane.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:30px;">لا يوجد بائعون — أضفهم من الإعدادات</p>'; return; }
+  const totalNet  = payroll.reduce((s,p)=>s+p.net,0);
+  const totalPaid = payroll.filter(p=>p.isPaid).reduce((s,p)=>s+p.net,0);
+  pane.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      ${[{l:'إجمالي الرواتب',v:fmt(totalNet)+' ج',bg:'#eff6ff',tc:'#1d4ed8'},{l:'تم الصرف',v:fmt(totalPaid)+' ج',bg:'#dcfce7',tc:'#15803d'},{l:'متبقي للصرف',v:fmt(totalNet-totalPaid)+' ج',bg:'#fee2e2',tc:'#b91c1c'}]
+        .map(k=>`<div style="background:${k.bg};border-radius:8px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:700;color:${k.tc};">${k.v}</div><div style="font-size:11px;color:var(--text-muted);">${k.l}</div></div>`).join('')}
+    </div>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">
+      <thead><tr style="background:var(--bg-secondary);">
+        ${['الموظف','المبيعات','عمولة%','العمولة','راتب أساسي','مكافأة','خصم','الصافي','الحالة','إجراء']
+          .map(h=>`<th style="padding:8px;text-align:center;border-bottom:2px solid var(--border);">${h}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${payroll.map(p=>`<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px;font-weight:700;">${p.name}</td>
+          <td style="padding:8px;text-align:center;">${fmt(p.empSales)} ج</td>
+          <td style="padding:8px;text-align:center;">${p.commPct}%</td>
+          <td style="padding:8px;text-align:center;color:#059669;font-weight:700;">${fmt(p.commission)} ج</td>
+          <td style="padding:8px;text-align:center;">${fmt(p.base)} ج</td>
+          <td style="padding:8px;text-align:center;">
+            <input type="number" value="${p.bonus}" min="0" style="width:70px;text-align:center;border:1px solid var(--border);border-radius:4px;padding:2px 4px;font-size:12px;"
+              onchange="savePayrollAdjustment('${month}','${p.name}',parseFloat(this.value)||0,${p.deduction});renderPayrollPane();" />
+          </td>
+          <td style="padding:8px;text-align:center;">
+            <input type="number" value="${p.deduction}" min="0" style="width:70px;text-align:center;border:1px solid var(--border);border-radius:4px;padding:2px 4px;font-size:12px;"
+              onchange="savePayrollAdjustment('${month}','${p.name}',${p.bonus},parseFloat(this.value)||0);renderPayrollPane();" />
+          </td>
+          <td style="padding:8px;text-align:center;font-weight:800;color:var(--primary);font-size:14px;">${fmt(p.net)} ج</td>
+          <td style="padding:8px;text-align:center;">
+            <span style="background:${p.isPaid?'#dcfce7':'#fee2e2'};color:${p.isPaid?'#15803d':'#b91c1c'};padding:2px 8px;border-radius:12px;font-size:11px;">${p.isPaid?'✅ مصروف':'⏳ لم يُصرف'}</span>
+          </td>
+          <td style="padding:8px;text-align:center;">
+            <button class="btn btn-sm" style="background:${p.isPaid?'#fee2e2':'#dcfce7'};color:${p.isPaid?'#b91c1c':'#15803d'};"
+              onclick="markPayrollPaid('${month}','${p.name}',${!p.isPaid});renderPayrollPane();">
+              ${p.isPaid?'↩ استرداد':'💵 صرف الراتب'}
+            </button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+// ══════════════════════════════════════════════
+// ACCOUNTING — محاسبة رسمية
+// ══════════════════════════════════════════════
+let _accTab = 'pnl';
+
+function switchAccTab(tab) {
+  _accTab = tab;
+  ['pnl','cashflow','summary'].forEach(t => {
+    const btn  = document.getElementById('accTab_'+t);
+    const pane = document.getElementById('accPane_'+t);
+    if (btn)  { btn.style.background = t===tab?'white':''; btn.style.fontWeight = t===tab?'700':'400'; btn.style.boxShadow = t===tab?'0 1px 4px rgba(0,0,0,.1)':''; }
+    if (pane) pane.classList.toggle('hidden', t!==tab);
+  });
+  renderAccTab(tab);
+}
+
+function renderAccountingPage() {
+  const mf = document.getElementById('accMonthFilter');
+  if (mf && !mf.options.length) {
+    const now = new Date();
+    const opts = [];
+    for (let i=0; i<12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      const v = d.toISOString().slice(0,7);
+      const l = d.toLocaleString('ar-EG',{year:'numeric',month:'long'});
+      opts.push(`<option value="${v}">${l}</option>`);
+    }
+    mf.innerHTML = opts.join('');
+  }
+  renderAccTab(_accTab);
+}
+
+function getAccMonth() {
+  return document.getElementById('accMonthFilter')?.value || new Date().toISOString().slice(0,7);
+}
+
+function renderAccTab(tab) {
+  if (tab==='pnl')      renderPnL();
+  if (tab==='cashflow') renderCashFlow();
+  if (tab==='summary')  renderAccSummary();
+}
+
+function renderPnL() {
+  const month = getAccMonth();
+  const pane = document.getElementById('accPane_pnl');
+  if (!pane) return;
+  const sales    = getSales().filter(s=>!s.isReturn&&s.date?.slice(0,7)===month);
+  const rets     = getSales().filter(s=> s.isReturn&&s.date?.slice(0,7)===month);
+  const exps     = getExpenses().filter(e=>e.date?.slice(0,7)===month);
+  const revenue  = sales.reduce((s,x)=>s+x.total,0);
+  const returnAmt= rets.reduce((s,x)=>s+Math.abs(x.total||0),0);
+  const netRev   = revenue - returnAmt;
+  const cogs     = sales.reduce((s,x)=>s+(x.items||[]).reduce((ss,i)=>ss+(i.cost||0)*i.qty,0),0);
+  const grossP   = netRev - cogs;
+  const salaries = typeof calcMonthlyPayroll==='function' ? calcMonthlyPayroll(month).reduce((s,p)=>s+p.net,0) : 0;
+  const opExp    = exps.reduce((s,e)=>s+(e.amount||0),0);
+  const totalOp  = salaries + opExp;
+  const ebit     = grossP - totalOp;
+  const gMargin  = netRev>0?(grossP/netRev*100).toFixed(1):0;
+
+  const row = (label, amt, indent=0, bold=false, sep=false, color='') => {
+    const st = `padding:${sep?'10':'7'}px 8px ${indent?'padding-right:'+(8+indent*16)+'px':''};${bold?'font-weight:700;':''}${color?'color:'+color+';':''}${sep?'border-top:2px solid var(--border);':''}`;
+    return `<tr><td style="${st}">${label}</td>
+      <td style="${st}text-align:left;direction:ltr;">${amt!==null?(amt<0?'-':'')+fmt(Math.abs(amt))+' ج':''}</td>
+      <td style="${st}text-align:center;font-size:11px;color:var(--text-muted);">${amt!==null&&netRev>0?(Math.abs(amt)/netRev*100).toFixed(1)+'%':''}</td></tr>`;
+  };
+
+  pane.innerHTML = `<div style="max-width:580px;">
+    <div style="font-size:15px;font-weight:800;margin-bottom:14px;color:var(--primary);">📋 قائمة الدخل — ${month}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;background:white;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+      <thead><tr style="background:var(--sidebar);color:white;">
+        <th style="padding:10px 8px;text-align:right;">البند</th>
+        <th style="padding:10px 8px;text-align:left;">المبلغ</th>
+        <th style="padding:10px 8px;text-align:center;">%</th>
+      </tr></thead><tbody>
+      ${row('إيرادات المبيعات',revenue,0,true,false,'#059669')}
+      ${row('المرتجعات',-returnAmt,1)}
+      ${row('صافي الإيراد',netRev,0,true,true,'#1d4ed8')}
+      ${row('تكلفة البضاعة المباعة',-cogs,1)}
+      ${row('إجمالي الربح',grossP,0,true,true,grossP>=0?'#059669':'#dc2626')}
+      <tr><td colspan="3" style="padding:4px 8px;background:var(--bg-secondary);font-size:11px;font-weight:700;color:var(--text-muted);">المصاريف التشغيلية</td></tr>
+      ${row('الرواتب',-salaries,1)}
+      ${row('مصاريف أخرى',-opExp,1)}
+      ${row('إجمالي المصاريف',-totalOp,0,true,true)}
+      ${row('الربح التشغيلي (EBIT)',ebit,0,true,true,ebit>=0?'#059669':'#dc2626')}
+      </tbody>
+    </table>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      ${[{l:'هامش الربح الإجمالي',v:gMargin+'%',bg:'#dcfce7',tc:'#15803d'},{l:'صافي الربح',v:fmt(ebit)+' ج',bg:ebit>=0?'#dcfce7':'#fee2e2',tc:ebit>=0?'#15803d':'#b91c1c'}]
+        .map(k=>`<div style="background:${k.bg};border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:800;color:${k.tc};">${k.v}</div><div style="font-size:12px;color:var(--text-muted);">${k.l}</div></div>`).join('')}
+    </div></div>`;
+}
+
+function renderCashFlow() {
+  const month = getAccMonth();
+  const pane  = document.getElementById('accPane_cashflow');
+  if (!pane) return;
+  const sales = getSales().filter(s=>!s.isReturn&&s.date?.slice(0,7)===month);
+  const rets  = getSales().filter(s=> s.isReturn&&s.date?.slice(0,7)===month);
+  const exps  = getExpenses().filter(e=>e.date?.slice(0,7)===month);
+  const pos   = (typeof getPurchaseOrders==='function'?getPurchaseOrders():[]).filter(po=>po.createdAt&&new Date(po.createdAt).toISOString().slice(0,7)===month&&po.status==='received');
+
+  const byM = {};
+  sales.forEach(s=>{ const m=s.paymentMethod||'cash'; byM[m]=(byM[m]||0)+s.total; });
+  const cashIn  = (byM['cash']||0)+(byM['نقدي']||0);
+  const cardIn  = (byM['card']||0)+(byM['فيزا']||0)+(byM['كريدت']||0);
+  const otherIn = Object.entries(byM).filter(([k])=>!['cash','نقدي','card','فيزا','كريدت'].includes(k)).reduce((s,[,v])=>s+v,0);
+  const totalIn = cashIn+cardIn+otherIn;
+  const retOut  = rets.reduce((s,x)=>s+Math.abs(x.total||0),0);
+  const expOut  = exps.reduce((s,e)=>s+(e.amount||0),0);
+  const purOut  = pos.reduce((s,po)=>s+(po.grandTotal||0),0);
+  const totalOut= retOut+expOut+purOut;
+  const net     = totalIn-totalOut;
+
+  const [yr,mo] = month.split('-').map(Number);
+  const days = new Date(yr,mo,0).getDate();
+  const daily = [];
+  for (let d=1;d<=days;d++) {
+    const ds=`${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    daily.push({d, s:sales.filter(x=>x.date?.slice(0,10)===ds).reduce((a,x)=>a+x.total,0), e:exps.filter(x=>x.date?.slice(0,10)===ds).reduce((a,x)=>a+(x.amount||0),0)});
+  }
+  const mx = Math.max(...daily.map(d=>Math.max(d.s,d.e)),1);
+  const bars = daily.map(({d,s,e})=>`<div style="display:flex;flex-direction:column;align-items:center;gap:1px;flex:1;min-width:6px;">
+    <div style="width:60%;background:#1a5faf;height:${Math.round(s/mx*70)}px;border-radius:2px 2px 0 0;" title="مبيعات ${fmt(s)} ج"></div>
+    <div style="width:60%;background:#ef4444;height:${Math.round(e/mx*70)}px;border-radius:2px 2px 0 0;" title="مصاريف ${fmt(e)} ج"></div>
+    ${days<=16?`<div style="font-size:8px;color:var(--text-muted);">${d}</div>`:''}
+  </div>`).join('');
+
+  pane.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      ${[{l:'إجمالي الداخل',v:'+'+fmt(totalIn)+' ج',bg:'#dcfce7',tc:'#15803d'},{l:'إجمالي الخارج',v:'-'+fmt(totalOut)+' ج',bg:'#fee2e2',tc:'#b91c1c'},{l:'صافي التدفق',v:(net>=0?'+':'')+fmt(net)+' ج',bg:net>=0?'#eff6ff':'#fef3c7',tc:net>=0?'#1d4ed8':'#854d0e'}]
+        .map(k=>`<div style="background:${k.bg};border-radius:8px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:${k.tc};">${k.v}</div><div style="font-size:11px;color:var(--text-muted);">${k.l}</div></div>`).join('')}
+    </div>
+    <div style="background:white;border-radius:10px;padding:14px;margin-bottom:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+      <div style="font-weight:700;margin-bottom:10px;font-size:13px;">📊 <span style="color:#1a5faf;">■ مبيعات</span> <span style="color:#ef4444;">■ مصاريف</span></div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:80px;">${bars}</div>
+    </div>
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+      <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        ${[['📥 مبيعات كاش','+'+fmt(cashIn)+' ج','#059669'],['💳 مبيعات بطاقة','+'+fmt(cardIn)+' ج','#059669'],['📥 أخرى','+'+fmt(otherIn)+' ج','#059669'],['📤 مرتجعات','-'+fmt(retOut)+' ج','#dc2626'],['📤 مصاريف','-'+fmt(expOut)+' ج','#dc2626'],['📤 موردون','-'+fmt(purOut)+' ج','#dc2626']]
+          .map(([l,v,tc])=>`<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;">${l}</td><td style="padding:8px;text-align:left;direction:ltr;font-weight:700;color:${tc};">${v}</td></tr>`).join('')}
+        <tr style="background:var(--bg-secondary);"><td style="padding:10px;font-weight:800;">🏦 صافي التدفق</td><td style="padding:10px;font-weight:800;text-align:left;direction:ltr;color:${net>=0?'#15803d':'#dc2626'};font-size:15px;">${(net>=0?'+':'')+fmt(net)} ج</td></tr>
+      </table>
+    </div>`;
+}
+
+function renderAccSummary() {
+  const pane = document.getElementById('accPane_summary');
+  if (!pane) return;
+  const allSales = getSales().filter(s=>!s.isReturn);
+  const allExp   = getExpenses();
+  const months   = [...new Set(allSales.map(s=>s.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+  const totalRev = allSales.reduce((s,x)=>s+x.total,0);
+  const totalCOGS= allSales.reduce((s,x)=>s+(x.items||[]).reduce((ss,i)=>ss+(i.cost||0)*i.qty,0),0);
+  const totalExp = allExp.reduce((s,e)=>s+(e.amount||0),0);
+  const totalNP  = totalRev-totalCOGS-totalExp;
+
+  const rows = months.slice(0,12).map(m=>{
+    const mS=allSales.filter(s=>s.date?.slice(0,7)===m).reduce((s,x)=>s+x.total,0);
+    const mC=allSales.filter(s=>s.date?.slice(0,7)===m).reduce((s,x)=>s+(x.items||[]).reduce((ss,i)=>ss+(i.cost||0)*i.qty,0),0);
+    const mE=allExp.filter(e=>e.date?.slice(0,7)===m).reduce((s,e)=>s+(e.amount||0),0);
+    const mP=mS-mC-mE;
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px;">${m}</td>
+      <td style="padding:8px;text-align:center;">${fmt(mS)} ج</td>
+      <td style="padding:8px;text-align:center;">${fmt(mC)} ج</td>
+      <td style="padding:8px;text-align:center;">${fmt(mE)} ج</td>
+      <td style="padding:8px;text-align:center;font-weight:700;color:${mP>=0?'#059669':'#dc2626'};">${fmt(mP)} ج</td>
+    </tr>`;
+  }).join('');
+
+  pane.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+      ${[{l:'إجمالي الإيراد',v:fmt(totalRev)+' ج',bg:'#eff6ff',tc:'#1d4ed8'},{l:'إجمالي التكاليف',v:fmt(totalCOGS)+' ج',bg:'#fef9c3',tc:'#854d0e'},{l:'إجمالي المصاريف',v:fmt(totalExp)+' ج',bg:'#fee2e2',tc:'#b91c1c'},{l:'صافي الأرباح الكلي',v:fmt(totalNP)+' ج',bg:totalNP>=0?'#dcfce7':'#fee2e2',tc:totalNP>=0?'#15803d':'#b91c1c'}]
+        .map(k=>`<div style="background:${k.bg};border-radius:8px;padding:12px;text-align:center;"><div style="font-size:16px;font-weight:800;color:${k.tc};">${k.v}</div><div style="font-size:11px;color:var(--text-muted);">${k.l}</div></div>`).join('')}
+    </div>
+    <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:var(--sidebar);color:white;">
+          ${['الشهر','الإيراد','التكلفة','المصاريف','صافي الربح'].map(h=>`<th style="padding:10px 8px;text-align:center;">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${rows||'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">لا توجد بيانات</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+// VLOOKUP — تقارير ربط الجداول
+// ══════════════════════════════════════════════
+let _vlTab = 'supplier';
+
+function showVLTab(tab) {
+  _vlTab = tab;
+  ['supplier','customer','turnover'].forEach(function(t) {
+    var btn  = document.getElementById('vlTab_'+t);
+    var pane = document.getElementById('vlPane_'+t);
+    if (btn)  { btn.style.background = t===tab?'white':''; btn.style.fontWeight = t===tab?'700':'400'; btn.style.boxShadow = t===tab?'0 1px 4px rgba(0,0,0,.1)':''; }
+    if (pane) pane.classList.toggle('hidden', t!==tab);
+  });
+  if (tab==='supplier')  renderSupplierAnalysis();
+  if (tab==='customer')  renderCustomerProductMatrix();
+  if (tab==='turnover')  renderInventoryTurnover();
+}
+
+function renderSupplierAnalysis() {
+  var pane = document.getElementById('vlPane_supplier');
+  if (!pane) return;
+  var suppliers = (typeof getSuppliers==='function') ? getSuppliers() : [];
+  var products  = (typeof getInventory==='function') ? getInventory() : DB.g('inventory',[]);
+  var allSales  = getSales().filter(function(s){return !s.isReturn;});
+
+  var supMap = {};
+  products.forEach(function(p) {
+    var supId   = p.supplierId || p.supplier || '';
+    var supObj  = suppliers.find(function(s){return s.id===supId;});
+    var supName = supObj ? supObj.name : (supId || 'غير محدد');
+    if (!supMap[supName]) supMap[supName] = { name:supName, products:[], revenue:0, cost:0, qty:0 };
+    var pRev=0, pQty=0, pCost=0;
+    allSales.forEach(function(sale){
+      (sale.items||[]).forEach(function(i){
+        if(i.code===p.code){ pRev+=i.price*i.qty; pQty+=i.qty; pCost+=(i.cost||0)*i.qty; }
+      });
+    });
+    supMap[supName].revenue+=pRev; supMap[supName].cost+=pCost; supMap[supName].qty+=pQty;
+    supMap[supName].products.push({name:p.name,code:p.code,revenue:pRev,qty:pQty,margin:pRev>0?Math.round((pRev-pCost)/pRev*100):0});
+  });
+
+  var rows = Object.values(supMap).sort(function(a,b){return b.revenue-a.revenue;});
+  var maxRev = Math.max.apply(null, rows.map(function(r){return r.revenue;}));
+  maxRev = maxRev || 1;
+
+  if (!rows.length) { pane.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:30px;">لا يوجد موردون أو منتجات مرتبطة — تأكد من تحديد المورد في المنتج</p>'; return; }
+
+  var html2 = '<div style="font-size:14px;font-weight:700;margin-bottom:12px;">🔗 تحليل الموردين × الإيراد</div><div style="display:flex;flex-direction:column;gap:12px;">';
+  rows.forEach(function(sup,i) {
+    var margin = sup.revenue>0?Math.round((sup.revenue-sup.cost)/sup.revenue*100):0;
+    var barW   = Math.round(sup.revenue/maxRev*100);
+    var top3   = sup.products.filter(function(p){return p.revenue>0;}).sort(function(a,b){return b.revenue-a.revenue;}).slice(0,3);
+    var mg_bg  = margin>=30?'#dcfce7':margin>=15?'#fef9c3':'#fee2e2';
+    var mg_tc  = margin>=30?'#15803d':margin>=15?'#854d0e':'#b91c1c';
+    html2 += '<div style="background:white;border-radius:10px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);">';
+    html2 += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">';
+    html2 += '<div style="font-weight:700;font-size:14px;">'+(i+1)+'. '+sup.name+'</div>';
+    html2 += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    html2 += '<span style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:12px;">إيراد: '+fmt(sup.revenue)+' ج</span>';
+    html2 += '<span style="background:'+mg_bg+';color:'+mg_tc+';padding:2px 8px;border-radius:12px;font-size:12px;">هامش: '+margin+'%</span>';
+    html2 += '<span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:12px;font-size:12px;">كمية: '+sup.qty+'</span></div></div>';
+    html2 += '<div style="background:var(--bg-secondary);border-radius:4px;height:6px;margin-bottom:8px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+barW+'%;"></div></div>';
+    if (top3.length) html2 += '<div style="font-size:12px;color:var(--text-muted);">أعلى منتجات: '+top3.map(function(p){return '<strong>'+p.name+'</strong> ('+fmt(p.revenue)+' ج)';}).join(' • ')+'</div>';
+    html2 += '</div>';
+  });
+  html2 += '</div>';
+  pane.innerHTML = html2;
+}
+
+function renderCustomerProductMatrix() {
+  var pane = document.getElementById('vlPane_customer');
+  if (!pane) return;
+  var customers = getCustomers();
+  var allSales  = getSales().filter(function(s){return !s.isReturn;});
+  var tiers = [
+    {name:'💎 بلاتيني', min:20000, color:'#4c1d95', bg:'#ede9fe'},
+    {name:'🥇 ذهبي',    min:5000,  color:'#78350f', bg:'#fef3c7'},
+    {name:'🥈 فضي',     min:1000,  color:'#1e3a5f', bg:'#dbeafe'},
+    {name:'🥉 برونزي',  min:0,     color:'#4b3320', bg:'#fde8d0'}
+  ];
+  var tierMap = {};
+  tiers.forEach(function(t){ tierMap[t.name]={tier:t,customers:[],revenue:0,prodMap:{}}; });
+
+  customers.forEach(function(c) {
+    var spent = c.totalSpent||0;
+    var tier  = tiers.find(function(t){return spent>=t.min;}) || tiers[3];
+    var tm    = tierMap[tier.name];
+    tm.customers.push(c);
+    allSales.filter(function(s){return s.customerId===c.id||s.customerPhone===c.phone;}).forEach(function(s){
+      tm.revenue += s.total;
+      (s.items||[]).forEach(function(i){ tm.prodMap[i.name]=(tm.prodMap[i.name]||0)+i.qty; });
+    });
+  });
+
+  var html2='<div style="font-size:14px;font-weight:700;margin-bottom:12px;">🔗 تحليل فئات العملاء × المنتجات</div>';
+  html2+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">';
+  Object.values(tierMap).filter(function(tm){return tm.customers.length>0;}).forEach(function(tm){
+    var top5 = Object.entries(tm.prodMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var avg  = tm.customers.length>0?tm.revenue/tm.customers.length:0;
+    html2+='<div style="background:white;border-radius:10px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);">';
+    html2+='<div style="font-size:14px;font-weight:800;color:'+tm.tier.color+';background:'+tm.tier.bg+';padding:6px 12px;border-radius:8px;margin-bottom:10px;">'+tm.tier.name+'</div>';
+    html2+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;font-size:12px;">';
+    html2+='<div style="background:var(--bg-secondary);border-radius:6px;padding:6px;text-align:center;"><div style="font-weight:700;">'+tm.customers.length+'</div><div style="color:var(--text-muted);">عملاء</div></div>';
+    html2+='<div style="background:var(--bg-secondary);border-radius:6px;padding:6px;text-align:center;"><div style="font-weight:700;">'+fmt(tm.revenue)+' ج</div><div style="color:var(--text-muted);">إجمالي</div></div>';
+    html2+='<div style="background:var(--bg-secondary);border-radius:6px;padding:6px;text-align:center;"><div style="font-weight:700;">'+fmt(avg)+' ج</div><div style="color:var(--text-muted);">متوسط الإنفاق</div></div>';
+    html2+='</div>';
+    if (top5.length) {
+      html2+='<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--text-muted);">الأكثر شراءً:</div>';
+      top5.forEach(function(e,i){ html2+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);font-size:12px;"><span>'+(i+1)+'. '+e[0]+'</span><strong>'+e[1]+' قطعة</strong></div>'; });
+    } else { html2+='<div style="font-size:12px;color:var(--text-muted);">لا توجد مشتريات مسجلة</div>'; }
+    html2+='</div>';
+  });
+  html2+='</div>';
+  pane.innerHTML=html2;
+}
+
+function renderInventoryTurnover() {
+  var pane = document.getElementById('vlPane_turnover');
+  if (!pane) return;
+  var products = (typeof getInventory==='function') ? getInventory() : DB.g('inventory',[]);
+  var allSales = getSales().filter(function(s){return !s.isReturn;});
+  var now = new Date();
+  var d90 = new Date(now.getFullYear(), now.getMonth()-3, now.getDate()).toISOString().slice(0,10);
+
+  var items = products.map(function(p) {
+    var soldQty=0, sold90=0, revenue=0;
+    allSales.forEach(function(sale){
+      (sale.items||[]).forEach(function(i){
+        if(i.code===p.code){ soldQty+=i.qty; revenue+=i.price*i.qty; if(sale.date&&sale.date.slice(0,10)>=d90) sold90+=i.qty; }
+      });
+    });
+    var stock    = p.quantity||0;
+    var annRate  = sold90>0 ? Math.round(sold90/90*365) : 0;
+    var daysSt   = annRate>0 ? Math.round(stock/(annRate/365)) : (stock>0?9999:0);
+    var turnover = (soldQty+stock)>0 ? Math.round(soldQty/(soldQty+stock)*100) : 0;
+    return {name:p.name, code:p.code, stock:stock, soldQty:soldQty, sold90:sold90, revenue:revenue, daysStock:daysSt, turnover:turnover};
+  }).filter(function(i){return i.soldQty>0||i.stock>0;}).sort(function(a,b){return b.revenue-a.revenue;});
+
+  var fast = items.filter(function(i){return i.daysStock<=30&&i.daysStock>0;}).length;
+  var slow = items.filter(function(i){return i.daysStock>90||i.daysStock===9999;}).length;
+  var dead = items.filter(function(i){return i.soldQty===0&&i.stock>0;}).length;
+
+  var html2='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">';
+  [{l:'⚡ سريعة (≤30 يوم)',v:fast,bg:'#dcfce7',tc:'#15803d'},{l:'🐌 بطيئة (>90 يوم)',v:slow,bg:'#fef9c3',tc:'#854d0e'},{l:'💀 راكدة (لا مبيعات)',v:dead,bg:'#fee2e2',tc:'#b91c1c'}].forEach(function(k){
+    html2+='<div style="background:'+k.bg+';border-radius:8px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:'+k.tc+';">'+k.v+' منتج</div><div style="font-size:11px;color:var(--text-muted);">'+k.l+'</div></div>';
+  });
+  html2+='</div><div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px;">';
+  html2+='<thead><tr style="background:var(--sidebar);color:white;">';
+  ['المنتج','المخزون','مباع (كلي)','مباع (90 يوم)','الإيراد','دوران%','أيام المخزون','الحالة'].forEach(function(h){html2+='<th style="padding:8px;text-align:center;">'+h+'</th>';});
+  html2+='</tr></thead><tbody>';
+  items.slice(0,50).forEach(function(i){
+    var st = i.soldQty===0&&i.stock>0 ? {l:'💀 راكد',bg:'#fee2e2',tc:'#b91c1c'} :
+             i.daysStock<=30&&i.daysStock>0 ? {l:'⚡ سريع',bg:'#dcfce7',tc:'#15803d'} :
+             i.daysStock<=90 ? {l:'✅ طبيعي',bg:'#eff6ff',tc:'#1d4ed8'} : {l:'🐌 بطيء',bg:'#fef9c3',tc:'#854d0e'};
+    html2+='<tr style="border-bottom:1px solid var(--border);">';
+    html2+='<td style="padding:8px;font-weight:600;">'+i.name+'</td>';
+    html2+='<td style="padding:8px;text-align:center;">'+i.stock+'</td>';
+    html2+='<td style="padding:8px;text-align:center;">'+i.soldQty+'</td>';
+    html2+='<td style="padding:8px;text-align:center;">'+i.sold90+'</td>';
+    html2+='<td style="padding:8px;text-align:center;">'+fmt(i.revenue)+' ج</td>';
+    html2+='<td style="padding:8px;text-align:center;"><div style="background:var(--bg-secondary);border-radius:4px;height:6px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+Math.min(i.turnover,100)+'%;"></div></div><div style="font-size:11px;text-align:center;">'+i.turnover+'%</div></td>';
+    html2+='<td style="padding:8px;text-align:center;">'+(i.daysStock===9999?'∞':i.daysStock===0?'-':i.daysStock+' يوم')+'</td>';
+    html2+='<td style="padding:8px;text-align:center;"><span style="background:'+st.bg+';color:'+st.tc+';padding:2px 8px;border-radius:12px;font-size:11px;">'+st.l+'</span></td>';
+    html2+='</tr>';
+  });
+  html2+='</tbody></table></div>';
+  pane.innerHTML=html2;
+}
 </script>
 
 <!-- ===================== CUSTOMER MODAL ===================== -->
@@ -6587,6 +7205,48 @@ function saveLoyaltySettings() {
     <div class="modal-footer">
       <button class="btn btn-gray" onclick="document.getElementById('loyaltySettingsModal').classList.add('hidden')">إلغاء</button>
       <button class="btn btn-primary" onclick="saveLoyaltySettings()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ATTENDANCE EDIT MODAL ===================== -->
+<div id="attendanceEditModal" class="modal-overlay hidden">
+  <div class="modal" style="width:420px;">
+    <h2>📅 تسجيل الحضور</h2>
+    <div class="form-group">
+      <label>الموظف</label>
+      <select class="form-control" id="attEmpSelect"></select>
+    </div>
+    <div class="form-group">
+      <label>التاريخ</label>
+      <input class="form-control" type="date" id="attDate" />
+    </div>
+    <div class="form-group">
+      <label>الحالة</label>
+      <select class="form-control" id="attStatus">
+        <option value="present">✅ حاضر</option>
+        <option value="absent">❌ غائب</option>
+        <option value="late">⏰ متأخر</option>
+        <option value="excused">🔵 إجازة</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group" style="margin:0;">
+        <label>وقت الحضور</label>
+        <input class="form-control" type="time" id="attCheckIn" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>وقت الانصراف</label>
+        <input class="form-control" type="time" id="attCheckOut" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>ملاحظات</label>
+      <input class="form-control" id="attNotes" placeholder="اختياري" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="document.getElementById('attendanceEditModal').classList.add('hidden')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveAttendanceEdit()">💾 حفظ</button>
     </div>
   </div>
 </div>
