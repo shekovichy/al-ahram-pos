@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AL-AHRAM HOME — نظام الكاشير</title>
+<title>VOODO ERP — نظام الكاشير</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -14,25 +14,25 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 :root {
-  --primary: #C8193C;
-  --primary-dark: #a8142f;
-  --primary-light: #e8214f;
-  --sidebar: #1a0508;
-  --sidebar-hover: #3d0c14;
+  --primary: #1a5faf;
+  --primary-dark: #134a8a;
+  --primary-light: #2472cc;
+  --sidebar: #0d1b35;
+  --sidebar-hover: #1a3460;
   --success: #16a34a;
   --danger: #dc2626;
   --warning: #d97706;
   --bg: #fdf5f6;
   --card: #ffffff;
   --border: #f0d8db;
-  --text: #1a0508;
+  --text: #1a2b4a;
   --text-muted: #8a5560;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Jost', 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
 
 /* ---- LOGIN ---- */
-.login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#1a0508 0%,#C8193C 60%,#e8214f 100%); }
+.login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#0d1b35 0%,#1a5faf 60%,#2472cc 100%); }
 .login-card { background:white; border-radius:20px; padding:48px; width:420px; box-shadow:0 24px 70px rgba(200,25,60,.35); }
 .login-logo { text-align:center; margin-bottom:36px; }
 .login-logo .emoji { font-size:52px; }
@@ -115,7 +115,7 @@ tr:hover td { background:#f8fafc; }
 /* ---- PRODUCTS GRID ---- */
 .products-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:10px; overflow-y:auto; flex:1; }
 .product-card { background:white; border:2px solid var(--border); border-radius:10px; padding:12px; cursor:pointer; transition:all .2s; text-align:center; user-select:none; }
-.product-card:hover { border-color:var(--primary); box-shadow:0 4px 14px rgba(200,25,60,.18); transform:translateY(-2px); }
+.product-card:hover { border-color:var(--primary); box-shadow:0 4px 14px rgba(26,95,175,.18); transform:translateY(-2px); }
 .product-card.out-of-stock { opacity:.45; cursor:not-allowed; pointer-events:none; }
 .product-code { font-size:10px; color:var(--text-muted); margin-bottom:5px; }
 .product-name { font-size:12px; font-weight:600; margin-bottom:7px; line-height:1.3; min-height:30px; }
@@ -154,7 +154,7 @@ tr:hover td { background:#f8fafc; }
 .badge-success { background:#dcfce7; color:#16a34a; }
 .badge-warning { background:#fef3c7; color:#92400e; }
 .badge-danger { background:#fee2e2; color:#dc2626; }
-.badge-info { background:#fce8ec; color:#C8193C; }
+.badge-info { background:#e8f0fb; color:#1a5faf; }
 .badge-gray { background:#f1f5f9; color:#475569; }
 
 /* ---- ALERT ---- */
@@ -244,7 +244,7 @@ input[type=number] { -moz-appearance:textfield; }
     justify-content:center;
     align-items:center;
   }
-  .nav-item.active { background:rgba(200,25,60,.6); border-top-color:var(--primary); }
+  .nav-item.active { background:rgba(26,95,175,.6); border-top-color:var(--primary); }
   .nav-icon { font-size:20px; width:auto; }
 
   /* Main content padding for bottom nav */
@@ -381,7 +381,7 @@ input[type=number] { -moz-appearance:textfield; }
   position:relative; background:none; border:none; cursor:pointer;
   font-size:20px; padding:4px 6px; border-radius:8px; transition:background .2s;
 }
-.bell-btn:hover { background:rgba(200,25,60,.1); }
+.bell-btn:hover { background:rgba(26,95,175,.1); }
 .bell-badge {
   position:absolute; top:-2px; right:-2px;
   background:var(--danger); color:white;
@@ -450,15 +450,28 @@ body.pos-fullscreen #cartFab { z-index:700; }
   <div class="login-wrap">
     <div class="login-card">
       <div class="login-logo">
-        <!-- AL-AHRAM HOME LOGO -->
-        <div style="display:inline-block; background:#C8193C; padding:18px 30px; border-radius:10px; margin-bottom:18px;">
-          <svg width="200" height="54" viewBox="0 0 200 54" xmlns="http://www.w3.org/2000/svg">
-            <style>text { font-family:'Jost','Arial',sans-serif; fill:white; letter-spacing:3px; }</style>
-            <!-- AL-AHRAM -->
-            <text x="100" y="28" font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="4">AL-AHRAM</text>
-            <!-- HOME -->
-            <text x="100" y="46" font-size="14" font-weight="300" text-anchor="middle" dominant-baseline="middle" letter-spacing="8">HOME</text>
+        <!-- VOODO LOGO -->
+        <div style="display:inline-flex;align-items:center;gap:14px;margin-bottom:18px;">
+          <svg width="60" height="60" viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="29,3 53,16 53,42 29,55 5,42 5,16" fill="#0d1b35" stroke="#1a5faf" stroke-width="2"/>
+            <circle cx="29" cy="29" r="6" fill="#1a5faf"/>
+            <circle cx="29" cy="14" r="3.5" fill="#F47920"/>
+            <circle cx="42" cy="21" r="3.5" fill="#F47920"/>
+            <circle cx="42" cy="37" r="3.5" fill="#F47920"/>
+            <circle cx="29" cy="44" r="3.5" fill="#2472cc"/>
+            <circle cx="16" cy="37" r="3.5" fill="#2472cc"/>
+            <circle cx="16" cy="21" r="3.5" fill="#2472cc"/>
+            <line x1="29" y1="23" x2="29" y2="14" stroke="#F47920" stroke-width="1.5"/>
+            <line x1="29" y1="23" x2="42" y2="21" stroke="#F47920" stroke-width="1.5"/>
+            <line x1="29" y1="23" x2="42" y2="37" stroke="#F47920" stroke-width="1.5"/>
+            <line x1="29" y1="35" x2="29" y2="44" stroke="#2472cc" stroke-width="1.5"/>
+            <line x1="29" y1="35" x2="16" y2="37" stroke="#2472cc" stroke-width="1.5"/>
+            <line x1="29" y1="35" x2="16" y2="21" stroke="#2472cc" stroke-width="1.5"/>
           </svg>
+          <div style="text-align:left;">
+            <div style="font-size:34px;font-weight:800;color:#0d1b35;letter-spacing:3px;line-height:1;">VOODO</div>
+            <div style="font-size:12px;font-weight:700;color:#1a5faf;letter-spacing:7px;margin-top:3px;">ERP</div>
+          </div>
         </div>
         <p style="color:var(--text-muted); font-size:14px;">نظام نقاط البيع وإدارة المخزون</p>
       </div>
@@ -473,15 +486,15 @@ body.pos-fullscreen #cartFab { z-index:700; }
       </div>
       <div id="loginError" class="alert alert-danger hidden">اسم المستخدم أو كلمة المرور غلط</div>
       <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()">تسجيل الدخول</button>
-      <div style="margin-top:16px; padding:12px; background:#fdf0f2; border-radius:8px; font-size:12px; color:var(--text-muted); line-height:1.8; border:1px solid #f5c6ce;">
+      <div style="margin-top:16px; padding:12px; background:#f0f5ff; border-radius:8px; font-size:12px; color:var(--text-muted); line-height:1.8; border:1px solid #c0d4f5;">
         <strong>بيانات الدخول الافتراضية:</strong><br>
         🔑 مدير: <code>admin</code> / <code>admin123</code><br>
         🏬 فرع 1: <code>branch1</code> / <code>branch1</code><br>
         🏬 فرع 2: <code>branch2</code> / <code>branch2</code><br>
         🏬 فرع 3: <code>branch3</code> / <code>branch3</code><br>
         🏬 فرع 4: <code>branch4</code> / <code>branch4</code><br>
-        <span style="display:block; margin-top:6px; border-top:1px solid #f5c6ce; padding-top:6px; font-size:11px;">
-          <a href="#" style="color:#C8193C; text-decoration:underline;"
+        <span style="display:block; margin-top:6px; border-top:1px solid #c0d4f5; padding-top:6px; font-size:11px;">
+          <a href="#" style="color:#1a5faf; text-decoration:underline;"
             onclick="event.preventDefault(); if(confirm('إعادة ضبط كل كلمات المرور للافتراضية؟')){ localStorage.removeItem('users'); localStorage.removeItem('pos_branch_users'); if(window._fbReady&&window._db) window._db.collection('pos_data').doc('auth').delete().catch(()=>{}); alert('تم الضبط — جرب الدخول الآن'); }">
             🔄 إعادة ضبط كل كلمات المرور للافتراضي
           </a>
@@ -548,10 +561,10 @@ body.pos-fullscreen #cartFab { z-index:700; }
   <div class="products-panel">
     <div class="flex items-center justify-between mb-16">
       <div style="display:inline-flex; align-items:center; gap:10px;">
-        <div style="background:#C8193C; padding:7px 12px; border-radius:7px;">
+        <div style="background:#1a5faf; padding:7px 12px; border-radius:7px;">
           <svg width="110" height="28" viewBox="0 0 110 28" xmlns="http://www.w3.org/2000/svg">
             <style>text{font-family:'Jost','Arial',sans-serif;fill:white;}</style>
-            <text x="55" y="11" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="2">AL-AHRAM</text>
+            <text x="55" y="11" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="2">VOODO</text>
             <text x="55" y="22" font-size="7" font-weight="300" text-anchor="middle" dominant-baseline="middle" letter-spacing="5">HOME</text>
           </svg>
         </div>
@@ -576,12 +589,27 @@ body.pos-fullscreen #cartFab { z-index:700; }
 <div id="managerView" class="hidden app-layout">
   <div class="sidebar">
     <div class="sidebar-header" style="padding:16px 18px;">
-      <div style="display:inline-block; background:#C8193C; padding:10px 14px; border-radius:8px; margin-bottom:10px; width:100%; box-sizing:border-box;">
-        <svg width="100%" height="44" viewBox="0 0 190 44" xmlns="http://www.w3.org/2000/svg">
-          <style>text { font-family:'Jost','Arial',sans-serif; fill:white; }</style>
-          <text x="95" y="19" font-size="17" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="3">AL-AHRAM</text>
-          <text x="95" y="36" font-size="11" font-weight="300" text-anchor="middle" dominant-baseline="middle" letter-spacing="7">HOME</text>
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 2px;margin-bottom:8px;">
+        <svg width="40" height="40" viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+          <polygon points="29,3 53,16 53,42 29,55 5,42 5,16" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+          <circle cx="29" cy="29" r="6" fill="#1a5faf"/>
+          <circle cx="29" cy="14" r="3.5" fill="#F47920"/>
+          <circle cx="42" cy="21" r="3.5" fill="#F47920"/>
+          <circle cx="42" cy="37" r="3.5" fill="#F47920"/>
+          <circle cx="29" cy="44" r="3.5" fill="rgba(255,255,255,.55)"/>
+          <circle cx="16" cy="37" r="3.5" fill="rgba(255,255,255,.55)"/>
+          <circle cx="16" cy="21" r="3.5" fill="rgba(255,255,255,.55)"/>
+          <line x1="29" y1="23" x2="29" y2="14" stroke="#F47920" stroke-width="1.5"/>
+          <line x1="29" y1="23" x2="42" y2="21" stroke="#F47920" stroke-width="1.5"/>
+          <line x1="29" y1="23" x2="42" y2="37" stroke="#F47920" stroke-width="1.5"/>
+          <line x1="29" y1="35" x2="29" y2="44" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+          <line x1="29" y1="35" x2="16" y2="37" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+          <line x1="29" y1="35" x2="16" y2="21" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
         </svg>
+        <div>
+          <div style="font-size:19px;font-weight:800;color:white;letter-spacing:2px;line-height:1.1;">VOODO</div>
+          <div style="font-size:9px;font-weight:700;color:#F47920;letter-spacing:5px;margin-top:1px;">ERP</div>
+        </div>
       </div>
       <p id="managerRoleLabel" style="font-size:12px; opacity:.7; text-align:center;">مدير النظام</p>
     </div>
@@ -591,7 +619,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
       <button class="nav-item"        data-page="sales"      onclick="showPage('sales')"><span class="nav-icon">💰</span>المبيعات</button>
       <button class="nav-item"        data-page="suspended"  onclick="showPage('suspended')" id="suspendedNavBtn">
         <span class="nav-icon">⏸</span>معلقة
-        <span id="suspendedBadge" class="hidden" style="background:#C8193C;color:white;border-radius:10px;font-size:9px;padding:1px 5px;margin-right:2px;"></span>
+        <span id="suspendedBadge" class="hidden" style="background:#1a5faf;color:white;border-radius:10px;font-size:9px;padding:1px 5px;margin-right:2px;"></span>
       </button>
       <button class="nav-item"        data-page="reports"    onclick="showPage('reports')"><span class="nav-icon">📈</span>التقارير</button>
       <button class="nav-item"        data-page="customers"  onclick="showPage('customers')"><span class="nav-icon">👥</span>العملاء</button>
@@ -2147,8 +2175,8 @@ function showReceipt(sale) {
     </div>`).join('');
   document.getElementById('receiptContent').innerHTML = `
     <div style="text-align:center;margin-bottom:10px;">
-      <div style="display:inline-block;background:#C8193C;padding:8px 18px;border-radius:6px;margin-bottom:6px;">
-        <div style="font-family:'Jost',Arial,sans-serif;color:white;font-size:14px;font-weight:700;letter-spacing:3px;">AL-AHRAM</div>
+      <div style="display:inline-block;background:#1a5faf;padding:8px 18px;border-radius:6px;margin-bottom:6px;">
+        <div style="font-family:'Jost',Arial,sans-serif;color:white;font-size:14px;font-weight:700;letter-spacing:3px;">VOODO</div>
         <div style="font-family:'Jost',Arial,sans-serif;color:white;font-size:8px;font-weight:300;letter-spacing:6px;">HOME</div>
       </div>
       <div style="font-size:13px;font-weight:700;margin-top:4px;">فاتورة مبيعات</div>
@@ -2354,7 +2382,7 @@ function buildDashboard() {
   if (top5.length) {
     chartTop = new Chart(document.getElementById('chartTop'), {
       type:'doughnut',
-      data:{ labels:top5.map(x=>x[0]), datasets:[{data:top5.map(x=>x[1]),backgroundColor:['#C8193C','#a8142f','#e8214f','#7c0d1e','#f05070']}] },
+      data:{ labels:top5.map(x=>x[0]), datasets:[{data:top5.map(x=>x[1]),backgroundColor:['#1a5faf','#F47920','#2472cc','#134a8a','#5b9bd5']}] },
       options:{ plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}, responsive:true }
     });
   }
@@ -2370,7 +2398,7 @@ function buildDashboard() {
     type:'line',
     data:{
       labels: trendMonths.map(m=>m.label),
-      datasets:[{ data:trendData, borderColor:'#C8193C', backgroundColor:'rgba(200,25,60,.08)', tension:.4, fill:true, pointBackgroundColor:'#C8193C', pointRadius:5, label:'الإيرادات' }]
+      datasets:[{ data:trendData, borderColor:'#1a5faf', backgroundColor:'rgba(26,95,175,.08)', tension:.4, fill:true, pointBackgroundColor:'#1a5faf', pointRadius:5, label:'الإيرادات' }]
     },
     options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{callback:v=>fmt(v)}}}, responsive:true }
   });
@@ -2384,7 +2412,7 @@ function buildDashboard() {
     type:'bar',
     data:{
       labels: branchLabels,
-      datasets:[{ data:branchRevs, backgroundColor:['#C8193C','#a8142f','#d97706','#7c3aed'], borderRadius:6, label:'الإيرادات' }]
+      datasets:[{ data:branchRevs, backgroundColor:['#1a5faf','#F47920','#d97706','#7c3aed'], borderRadius:6, label:'الإيرادات' }]
     },
     options:{
       indexAxis:'y',
@@ -2767,7 +2795,7 @@ function buildSalesReport() {
   if (chartRptSales) chartRptSales.destroy();
   chartRptSales = new Chart(document.getElementById('chartRptSales'), {
     type:'line',
-    data:{ labels:days, datasets:[{data:days.map(d=>dayMap[d]),borderColor:'#C8193C',backgroundColor:'rgba(200,25,60,.1)',fill:true,tension:.3,label:'المبيعات'}] },
+    data:{ labels:days, datasets:[{data:days.map(d=>dayMap[d]),borderColor:'#1a5faf',backgroundColor:'rgba(26,95,175,.1)',fill:true,tension:.3,label:'المبيعات'}] },
     options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}, responsive:true }
   });
 
@@ -2941,7 +2969,7 @@ function buildKPIReport() {
   if (chartKPI) chartKPI.destroy();
   chartKPI = new Chart(document.getElementById('chartKPI'), {
     type:'line',
-    data:{ labels:days, datasets:[{data:days.map(d=>dayMap[d]),borderColor:'#C8193C',backgroundColor:'rgba(200,25,60,.1)',fill:true,tension:.3,label:'المبيعات'}] },
+    data:{ labels:days, datasets:[{data:days.map(d=>dayMap[d]),borderColor:'#1a5faf',backgroundColor:'rgba(26,95,175,.1)',fill:true,tension:.3,label:'المبيعات'}] },
     options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}, responsive:true }
   });
 
@@ -5397,7 +5425,7 @@ function buildCompareReport() {
     type:'line',
     data:{
       labels: trendMonths.map(m=>m.label),
-      datasets:[{ data:trendData, borderColor:'#C8193C', backgroundColor:'rgba(200,25,60,.08)', tension:.4, fill:true, pointBackgroundColor:'#C8193C', pointRadius:5, label:'الإيرادات' }]
+      datasets:[{ data:trendData, borderColor:'#1a5faf', backgroundColor:'rgba(26,95,175,.08)', tension:.4, fill:true, pointBackgroundColor:'#1a5faf', pointRadius:5, label:'الإيرادات' }]
     },
     options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{callback:v=>fmt(v)}}}, responsive:true }
   });
@@ -5659,7 +5687,7 @@ function shareReceiptWhatsApp() {
   const sale = _lastSale;
   if (!sale) { alert('لا توجد فاتورة لمشاركتها'); return; }
   const lines = [
-    `🧾 فاتورة من AL-AHRAM HOME`,
+    `🧾 فاتورة من VOODO ERP`,
     `📅 ${new Date(sale.date).toLocaleString('ar-EG')}`,
     `🏬 ${sale.branchName || getBranchName(sale.branchId || 'b1')}`,
     `👤 ${sale.salesperson || sale.cashier || ''}`,
@@ -5670,7 +5698,7 @@ function shareReceiptWhatsApp() {
     `💰 الإجمالي: ${fmt(sale.total)} ج`,
     `💳 الدفع: ${sale.payMethod === 'cash' ? 'نقدي' : 'كارت'}`,
     ``,
-    `شكراً لثقتك بـ AL-AHRAM HOME 🏠`
+    `شكراً لثقتك بـ VOODO ERP 🏠`
   ].filter(l => l !== undefined && l !== null);
   const text = encodeURIComponent(lines.join('\n'));
   window.open(`https://wa.me/?text=${text}`, '_blank');
@@ -5680,7 +5708,7 @@ function shareOffersWhatsApp() {
   const promos = getPromos().filter(p => p.active);
   if (!promos.length) { alert('لا توجد عروض نشطة للمشاركة'); return; }
   const lines = [
-    `🏷️ *عروض وحزم AL-AHRAM HOME*`,
+    `🏷️ *عروض وحزم VOODO ERP*`,
     `━━━━━━━━━━━━━━━━━━━━`,
     ...promos.map(p => {
       if (p.type === 'bundle') {
@@ -5690,7 +5718,7 @@ function shareOffersWhatsApp() {
       }
     }),
     `━━━━━━━━━━━━━━━━━━━━`,
-    `🏠 AL-AHRAM HOME — بادر بالشراء!`
+    `🏠 VOODO ERP — بادر بالشراء!`
   ];
   const text = encodeURIComponent(lines.join('\n'));
   window.open(`https://wa.me/?text=${text}`, '_blank');
@@ -5860,7 +5888,7 @@ function sendReturnWhatsApp() {
   document.getElementById('crWhatsAppModal').classList.add('hidden');
   if (!s) return;
   const lines = [
-    `🔄 إيصال مرتجع — AL-AHRAM HOME`,
+    `🔄 إيصال مرتجع — VOODO ERP`,
     `📅 ${new Date(s.date).toLocaleString('ar-EG')}`,
     `🏬 ${s.branchName || getBranchName(s.branchId || 'b1')}`,
     `فاتورة أصلية: #${String(s.originalSaleId).slice(-6)}`,
@@ -5870,7 +5898,7 @@ function sendReturnWhatsApp() {
     `💰 المبلغ المسترد: ${fmt(Math.abs(s.total))} ج`,
     s.returnReason !== 'غير محدد' ? `📝 السبب: ${s.returnReason}` : '',
     ``,
-    `شكراً لثقتك بـ AL-AHRAM HOME 🏠`
+    `شكراً لثقتك بـ VOODO ERP 🏠`
   ].filter(l => l !== '');
   const text = encodeURIComponent(lines.join('\n'));
   const url = phone ? `https://wa.me/2${phone}?text=${text}` : `https://wa.me/?text=${text}`;
@@ -5938,9 +5966,9 @@ function renderBarcodePreview() {
 
 function buildPriceTag(item, showPrice, dim, preview) {
   const priceHTML = showPrice === 'none' ? '' :
-    showPrice === 'after' ? `<div style="font-size:${preview?'11px':'14px'}; font-weight:800; color:#C8193C; margin-top:2px;">${fmt(item.priceAfter)} ج</div>` :
-    showPrice === 'before' ? `<div style="font-size:${preview?'11px':'14px'}; font-weight:800; color:#C8193C; margin-top:2px;">${fmt(item.priceBefore||item.priceAfter)} ج</div>` :
-    `<div style="font-size:9px; color:#888; text-decoration:line-through;">${fmt(item.priceBefore||item.priceAfter)} ج</div><div style="font-size:${preview?'12px':'16px'}; font-weight:800; color:#C8193C;">${fmt(item.priceAfter)} ج</div>`;
+    showPrice === 'after' ? `<div style="font-size:${preview?'11px':'14px'}; font-weight:800; color:#1a5faf; margin-top:2px;">${fmt(item.priceAfter)} ج</div>` :
+    showPrice === 'before' ? `<div style="font-size:${preview?'11px':'14px'}; font-weight:800; color:#1a5faf; margin-top:2px;">${fmt(item.priceBefore||item.priceAfter)} ج</div>` :
+    `<div style="font-size:9px; color:#888; text-decoration:line-through;">${fmt(item.priceBefore||item.priceAfter)} ج</div><div style="font-size:${preview?'12px':'16px'}; font-weight:800; color:#1a5faf;">${fmt(item.priceAfter)} ج</div>`;
   return `<div style="width:${dim.w}; height:${dim.h}; border:1px solid #ccc; border-radius:4px; padding:3px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:white; font-family:monospace; overflow:hidden;">
     <div style="font-size:${dim.font}; font-weight:700; text-align:center; width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${item.name}</div>
     <svg id="bc-${preview?'p':'pr'}-${item.code.replace(/[^a-zA-Z0-9]/g,'_')}" style="max-width:100%; height:${preview?'24px':'36px'};"></svg>
