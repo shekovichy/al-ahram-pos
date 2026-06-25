@@ -2705,7 +2705,7 @@ function printSaleFromModal() {
 // REPORTS
 // ══════════════════════════════════════════════
 function switchReport(name, tab) {
-  ['rpt-sales','rpt-inventory','rpt-profit','rpt-kpi','rpt-sellers','rpt-returns','rpt-abc','rpt-compare'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['rpt-sales','rpt-inventory','rpt-profit','rpt-kpi','rpt-sellers','rpt-returns'].forEach(id => { var el = document.getElementById(id); if(el) el.classList.add('hidden'); });
   document.getElementById('rpt-'+name).classList.remove('hidden');
   document.querySelectorAll('#page-reports .tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
