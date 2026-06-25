@@ -5589,6 +5589,7 @@ let _crSelectedSale = null;
 let _crLastReturn   = null;
 
 function openCashierReturn() {
+  toggleMobileCart(false); // close cart sheet on mobile first
   document.getElementById('crSearchInput').value = '';
   document.getElementById('crResultsBody').innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">اكتب رقم التليفون أو رقم الفاتورة أو كود المنتج للبحث</p>';
   document.getElementById('cashierReturnSearchModal').classList.remove('hidden');
@@ -6021,4 +6022,4 @@ function printBarcodes() {
   </div>
 </div>
 
-<!-- ===================== BARCODE / PRICE TAG MODAL ================
+<!-- =
