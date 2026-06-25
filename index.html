@@ -1256,14 +1256,25 @@ body.pos-fullscreen #cartFab { z-index:700; }
 
       <!-- ── SUSPENDED BILLS ── -->
       <div id="page-suspended" class="hidden">
-        <div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:8px;">
-          <div>
-            <h3 style="font-size:16px; font-weight:700; margin-bottom:2px;">فواتير معلقة</h3>
-            <span id="suspendedCountLabel" style="font-size:12px; color:var(--text-muted);"></span>
-          </div>
-          <button class="btn btn-gray btn-sm" onclick="renderSuspendedPage()">🔄 تحديث يدوي</button>
+        <!-- Tabs -->
+        <div class="tabs" style="margin-bottom:16px;">
+          <div class="tab active" id="suspTab_bills"  onclick="switchSuspTab('bills',this)">⏸ الفواتير المعلقة <span id="suspBillsCount" style="background:#1a5faf;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-right:4px;"></span></div>
+          <div class="tab" id="suspTab_approvals" onclick="switchSuspTab('approvals',this)">✏️ طلبات تعديل الأسعار <span id="suspApprovalsCount" style="background:#ef4444;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-right:4px;display:none;"></span></div>
         </div>
-        <div id="suspendedList"></div>
+
+        <!-- Bills pane -->
+        <div id="suspPane_bills">
+          <div class="flex items-center justify-between mb-12" style="flex-wrap:wrap;gap:8px;">
+            <span id="suspendedCountLabel" style="font-size:12px; color:var(--text-muted);"></span>
+            <button class="btn btn-gray btn-sm" onclick="renderSuspendedPage()">🔄 تحديث</button>
+          </div>
+          <div id="suspendedList"></div>
+        </div>
+
+        <!-- Approvals pane (admin only) -->
+        <div id="suspPane_approvals" class="hidden">
+          <div id="suspApprovalsList"></div>
+        </div>
       </div>
 
       <!-- ── CUSTOMERS ── -->
@@ -2393,6 +2404,19 @@ function showPage(page) {
   if (page === 'hr')         renderHRPage();
   if (page === 'accounting') renderAccountingPage();
   if (page === 'customized') renderCustomizedPage();
+  if (page === 'suspended') {
+    renderSuspendedPage();
+    // Show approvals tab for admin if there are pending requests
+    if (currentUser === 'admin') {
+      var pendingCount = getApprovals().filter(function(r){ return r.status==='pending'; }).length;
+      var badge = document.getElementById('suspApprovalsCount');
+      if (badge) { badge.textContent = pendingCount; badge.style.display = pendingCount?'inline':'none'; }
+      document.getElementById('suspTab_approvals').style.display = currentUser==='admin' ? '' : 'none';
+    } else {
+      var t = document.getElementById('suspTab_approvals');
+      if (t) t.style.display = 'none';
+    }
+  }
   if (page === 'warehouse')  renderWarehousePage();
   if (page === 'expenses')   renderExpensesPage();
   if (page === 'audit')      renderAuditPage();
@@ -7791,6 +7815,84 @@ function initApprovalsFirebaseListener() {
         updateApprovalBadge();
       }
     }, function(err){ console.error('approvals listener:', err); });
+}
+
+// ══════════════════════════════════════════
+// SUSPENDED PAGE TABS
+// ══════════════════════════════════════════
+function switchSuspTab(tab, el) {
+  ['bills','approvals'].forEach(function(t){
+    var pane = document.getElementById('suspPane_'+t);
+    var btn  = document.getElementById('suspTab_'+t);
+    if (pane) pane.classList.toggle('hidden', t!==tab);
+    if (btn)  btn.classList.toggle('active',  t===tab);
+  });
+  if (tab === 'approvals') renderSuspApprovals();
+}
+
+function renderSuspApprovals() {
+  var el = document.getElementById('suspApprovalsList');
+  if (!el) return;
+  var list = getApprovals().filter(function(r){ return r.status === 'pending'; });
+
+  // Update count badge
+  var badge = document.getElementById('suspApprovalsCount');
+  if (badge) { badge.textContent = list.length; badge.style.display = list.length ? 'inline' : 'none'; }
+
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">✅ لا توجد طلبات معلقة</div>';
+    return;
+  }
+  el.innerHTML = list.map(function(req){
+    var modItems = req.items.filter(function(i){ return i.priceModified; });
+    var itemsHtml = modItems.map(function(i){
+      return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:13px;">'
+        +'<span style="font-weight:600;">'+i.name+' × '+i.qty+'</span>'
+        +'<span><span style="text-decoration:line-through;color:#9ca3af;">'+fmt(i.originalPrice)+' ج</span>'
+        +' → <span style="color:#dc2626;font-weight:700;">'+fmt(i.price)+' ج</span></span>'
+        +'</div>';
+    }).join('');
+    return '<div style="background:white;border:1px solid #fecaca;border-right:4px solid #ef4444;border-radius:10px;padding:16px;margin-bottom:12px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+      +'<div>'
+      +'<div style="font-weight:700;font-size:14px;">✏️ طلب تعديل سعر</div>'
+      +'<div style="font-size:12px;color:var(--text-muted);">'+req.date.slice(0,16).replace('T',' ')+' — '+req.branchName+' — '+req.cashier+'</div>'
+      +'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:#1d4ed8;">'+fmt(req.total)+' ج</div>'
+      +'</div>'
+      +'<div style="margin-bottom:10px;">'+itemsHtml+'</div>'
+      +(req.note?'<div style="background:#fef9c3;padding:6px 10px;border-radius:6px;font-size:12px;margin-bottom:10px;">💬 '+req.note+'</div>':'')
+      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +'<input id="sAdminNote_'+req.id+'" class="form-control" placeholder="ملاحظة للكاشير (اختياري)" style="flex:1;font-size:12px;" />'
+      +'<button onclick="approveSuspRequest('+req.id+')" class="btn btn-success">✅ موافقة</button>'
+      +'<button onclick="rejectSuspRequest('+req.id+')" class="btn btn-danger btn-sm">❌ رفض</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function approveSuspRequest(id) {
+  var list = getApprovals();
+  var req  = list.find(function(r){ return r.id===id; });
+  if (!req) return;
+  req.status    = 'approved';
+  req.adminNote = document.getElementById('sAdminNote_'+id)?.value || '';
+  req.approvedAt= new Date().toISOString();
+  setApprovals(list);
+  updateApprovalBadge();
+  renderSuspApprovals();
+}
+
+function rejectSuspRequest(id) {
+  var list = getApprovals();
+  var req  = list.find(function(r){ return r.id===id; });
+  if (!req) return;
+  req.status    = 'rejected';
+  req.adminNote = document.getElementById('sAdminNote_'+id)?.value || '';
+  req.rejectedAt= new Date().toISOString();
+  setApprovals(list);
+  updateApprovalBadge();
+  renderSuspApprovals();
 }
 </script>
 
