@@ -6022,4 +6022,57 @@ function printBarcodes() {
   </div>
 </div>
 
-<!-- =
+<!-- ===================== CASHIER RETURN SEARCH MODAL ===================== -->
+<div id="cashierReturnSearchModal" class="modal-overlay hidden">
+  <div class="modal" style="width:580px;max-height:85vh;overflow-y:auto;">
+    <h2>🔄 مرتجعات — بحث عن فاتورة</h2>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <input class="form-control" id="crSearchInput" placeholder="رقم تليفون / رقم فاتورة / كود المنتج"
+        oninput="searchSalesForReturn()" style="flex:1;" />
+      <button class="btn btn-primary" onclick="searchSalesForReturn()">🔍 بحث</button>
+    </div>
+    <div id="crResultsBody" style="min-height:80px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="document.getElementById('cashierReturnSearchModal').classList.add('hidden')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CASHIER RETURN ITEMS MODAL ===================== -->
+<div id="cashierReturnItemsModal" class="modal-overlay hidden">
+  <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto;">
+    <h2>🔄 اختر الأصناف المُرجَعة</h2>
+    <div id="crInvoiceInfo" style="background:var(--bg-secondary);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+    <div id="crItemsList"></div>
+    <div class="form-group" style="margin-top:12px;">
+      <label>سبب الإرجاع</label>
+      <input class="form-control" id="crReturnReason" placeholder="عيب في المنتج / خطأ في الطلب ..." />
+    </div>
+    <div id="crReturnSummary" style="background:#fee2e2;border-radius:8px;padding:12px;margin-top:10px;display:none;">
+      <span style="font-size:14px;font-weight:700;color:var(--danger);">المبلغ المسترد: <span id="crReturnTotal">0</span> ج</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="document.getElementById('cashierReturnItemsModal').classList.add('hidden');document.getElementById('cashierReturnSearchModal').classList.remove('hidden');">↩ رجوع</button>
+      <button class="btn btn-danger" onclick="processCashierReturn()">✅ تأكيد الإرجاع</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CASHIER RETURN WHATSAPP MODAL ===================== -->
+<div id="crWhatsAppModal" class="modal-overlay hidden">
+  <div class="modal" style="width:420px;">
+    <h2>📲 إرسال إيصال المرتجع</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">تم المرتجع بنجاح ✅ — هل تريد إرسال إيصال للعميل؟</p>
+    <div class="form-group">
+      <label>رقم واتساب العميل</label>
+      <input class="form-control" id="crWAPhone" placeholder="مثال: 01012345678" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="document.getElementById('crWhatsAppModal').classList.add('hidden')">تخطي</button>
+      <button class="btn" style="background:#25D366;color:white;" onclick="sendReturnWhatsApp()">📲 إرسال واتساب</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
