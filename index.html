@@ -818,6 +818,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
             <button class="btn btn-outline" onclick="openBarcodeModal()">🏷️ طباعة باركود / أسعار</button>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select class="form-control" id="invBranchFilter" onchange="renderInventory()" style="width:150px;font-size:13px;font-weight:600;color:#1d4ed8;"></select>
             <input class="search-input" id="invSearch" placeholder="🔍 بحث..." oninput="renderInventory()" style="width:180px;" />
             <select class="form-control" id="invCatFilter" onchange="renderInventory()" style="width:auto;font-size:13px;"><option value="">كل الفئات</option></select>
             <select class="form-control" id="invFamFilter" onchange="renderInventory()" style="width:auto;font-size:13px;"><option value="">كل المجموعات</option></select>
@@ -841,6 +842,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
       <div id="page-sales" class="hidden">
         <div class="flex items-center justify-between mb-16 filter-row" style="flex-wrap:wrap; gap:8px;">
           <div class="flex gap-8 items-center" style="flex-wrap:wrap;">
+            <select class="form-control" id="salesBranchFilter" onchange="renderSales()" style="width:150px;font-size:13px;font-weight:600;color:#1d4ed8;"></select>
             <input type="date" id="salesFrom" class="form-control" style="width:155px;" onchange="renderSales()" />
             <span style="color:var(--text-muted); font-size:13px;">إلى</span>
             <input type="date" id="salesTo" class="form-control" style="width:155px;" onchange="renderSales()" />
@@ -2598,8 +2600,20 @@ function buildDashboard() {
 // INVENTORY
 // ══════════════════════════════════════════════
 function renderInventory() {
+  // Populate branch filter if empty
+  var ibf = document.getElementById('invBranchFilter');
+  if (ibf && ibf.options.length === 0) {
+    var bnames = getBranches();
+    BRANCH_IDS.forEach(function(b){
+      var o = document.createElement('option'); o.value = b;
+      o.textContent = (bnames[b]||BRANCH_DEFAULTS[b]);
+      ibf.appendChild(o);
+    });
+    ibf.value = currentBranch;
+  }
+  var selBranch = ibf ? ibf.value : currentBranch;
   const q = (document.getElementById('invSearch')?.value || '').toLowerCase();
-  const inv = getInv(), thresh = getThreshold();
+  const inv = getInv(selBranch), thresh = getThreshold();
   const catFilter = document.getElementById('invCatFilter')?.value || '';
   const famFilter = document.getElementById('invFamFilter')?.value || '';
   let items = inv;
@@ -2778,9 +2792,20 @@ function clearSalesFilter() {
 }
 
 function renderSales() {
+  // Populate branch filter if empty
+  var sbf = document.getElementById('salesBranchFilter');
+  if (sbf && sbf.options.length === 0) {
+    var opt0 = document.createElement('option'); opt0.value='all'; opt0.textContent='🏬 كل الفروع'; sbf.appendChild(opt0);
+    var bnames = getBranches();
+    BRANCH_IDS.filter(function(b){ return b!=='wh'; }).forEach(function(b){
+      var o = document.createElement('option'); o.value=b; o.textContent=(bnames[b]||BRANCH_DEFAULTS[b]); sbf.appendChild(o);
+    });
+  }
+  var selBranch = sbf ? sbf.value : 'all';
   const from = document.getElementById('salesFrom').value;
   const to   = document.getElementById('salesTo').value;
   let sales  = getSales();
+  if (selBranch && selBranch !== 'all') sales = sales.filter(function(s){ return s.branchId === selBranch; });
   if (from) sales = sales.filter(s => s.date.slice(0,10) >= from);
   if (to)   sales = sales.filter(s => s.date.slice(0,10) <= to);
   sales.sort((a,b) => new Date(b.date) - new Date(a.date));
