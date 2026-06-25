@@ -2055,7 +2055,19 @@ function renderProducts() {
   // Block POS sales from warehouse
   if (currentBranch === 'wh') {
     const grid = document.getElementById('productGrid');
-    if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;"><div style="font-size:48px;">🏭</div><h3 style="font-size:18px;font-weight:700;margin:12px 0 6px;">المخزن الرئيسي</h3><p style="color:var(--text-muted);font-size:14px;">لا يمكن البيع من المخزن الرئيسي<br>الرجاء التحويل لأحد الفروع أولاً</p><button class="btn btn-primary" style="margin-top:16px;" onclick="showPage('warehouse')">🏭 الذهاب للمخزن</button></div>';
+    if (grid) {
+      grid.innerHTML = '';
+      var msg = document.createElement('div');
+      msg.style.cssText = 'grid-column:1/-1;text-align:center;padding:60px 20px;';
+      msg.innerHTML = '<div style="font-size:48px;">🏭</div><h3 style="font-size:18px;font-weight:700;margin:12px 0 6px;">المخزن الرئيسي</h3><p style="color:var(--text-muted);font-size:14px;">لا يمكن البيع من المخزن الرئيسي<br>الرجاء التحويل لأحد الفروع أولاً</p>';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.style.marginTop = '16px';
+      btn.textContent = '🏭 الذهاب للمخزن';
+      btn.onclick = function(){ showPage('warehouse'); };
+      msg.appendChild(btn);
+      grid.appendChild(msg);
+    }
     return;
   }
   const q = document.getElementById('productSearch').value.trim().toLowerCase();
