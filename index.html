@@ -811,6 +811,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
             <input type="file" id="excelUpload" accept=".xlsx,.xls,.csv" class="hidden" onchange="importExcel(event)" />
             <button class="btn btn-success" onclick="openProductModal()">➕ إضافة منتج</button>
             <button class="btn btn-outline" onclick="exportInventoryExcel()">📥 تصدير Excel</button>
+            <button class="btn btn-outline" onclick="openBulkCategoryModal()" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;">🏷️ تحديث الفئات</button>
             <button class="btn btn-outline" onclick="openBarcodeModal()">🏷️ طباعة باركود / أسعار</button>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -863,8 +864,6 @@ body.pos-fullscreen #cartFab { z-index:700; }
           <div class="tab" onclick="switchReport('kpi',this)">🎯 مؤشرات الأداء</div>
           <div class="tab" onclick="switchReport('sellers',this)">👤 البائعين</div>
           <div class="tab" onclick="switchReport('returns',this)">🔄 المرتجعات</div>
-          <div class="tab" onclick="switchReport('abc',this)">🔢 تحليل ABC</div>
-          <div class="tab" onclick="switchReport('compare',this)">⚡ مقارنة</div>
         </div>
 
         <!-- Sales Report -->
@@ -1086,6 +1085,37 @@ body.pos-fullscreen #cartFab { z-index:700; }
                   <tbody id="sellers-body"></tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Returns Report -->
+        <div id="rpt-returns" class="hidden">
+          <div class="flex gap-8 mb-16" style="flex-wrap:wrap; align-items:center;">
+            <select id="rptReturnsPeriod" class="form-control" style="width:170px;" onchange="buildReturnsReport()">
+              <option value="today">اليوم</option>
+              <option value="week">هذا الأسبوع</option>
+              <option value="month" selected>هذا الشهر</option>
+              <option value="year">هذه السنة</option>
+              <option value="custom">مخصص</option>
+            </select>
+            <span id="rptReturnsCustom" class="hidden flex gap-8">
+              <input type="date" id="rptReturnsFrom" class="form-control" style="width:148px;" onchange="buildReturnsReport()" />
+              <input type="date" id="rptReturnsTo"   class="form-control" style="width:148px;" onchange="buildReturnsReport()" />
+            </span>
+          </div>
+          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:16px;">
+            <div class="stat-card"><div class="stat-label">🔄 عدد المرتجعات</div><div class="stat-value" id="ret-count" style="color:var(--danger); font-size:22px;">0</div></div>
+            <div class="stat-card"><div class="stat-label">💸 إجمالي المسترد</div><div class="stat-value" id="ret-total" style="color:var(--danger); font-size:22px;">0</div></div>
+            <div class="stat-card"><div class="stat-label">📦 وحدات مرتجعة</div><div class="stat-value" id="ret-units" style="font-size:22px;">0</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">تفاصيل المرتجعات</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>رقم المرتجع</th><th>التاريخ</th><th>فاتورة أصلية</th><th>الأصناف</th><th>المبلغ المسترد</th><th>السبب</th></tr></thead>
+                <tbody id="ret-body"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1441,121 +1471,6 @@ body.pos-fullscreen #cartFab { z-index:700; }
             </div>
             <div id="sBackupMsg" class="mt-16"></div>
             <div id="lastBackupInfo" style="margin-top:10px;font-size:12px;color:var(--text-muted);"></div>
-          </div>
-        </div>
-        <!-- Returns Report -->
-        <div id="rpt-returns" class="hidden">
-          <div class="flex gap-8 mb-16" style="flex-wrap:wrap; align-items:center;">
-            <select id="rptReturnsPeriod" class="form-control" style="width:170px;" onchange="buildReturnsReport()">
-              <option value="today">اليوم</option>
-              <option value="week">هذا الأسبوع</option>
-              <option value="month" selected>هذا الشهر</option>
-              <option value="year">هذه السنة</option>
-              <option value="custom">مخصص</option>
-            </select>
-            <span id="rptReturnsCustom" class="hidden flex gap-8">
-              <input type="date" id="rptReturnsFrom" class="form-control" style="width:148px;" onchange="buildReturnsReport()" />
-              <input type="date" id="rptReturnsTo"   class="form-control" style="width:148px;" onchange="buildReturnsReport()" />
-            </span>
-          </div>
-          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:16px;">
-            <div class="stat-card"><div class="stat-label">🔄 عدد المرتجعات</div><div class="stat-value" id="ret-count" style="color:var(--danger); font-size:22px;">0</div></div>
-            <div class="stat-card"><div class="stat-label">💸 إجمالي المسترد</div><div class="stat-value" id="ret-total" style="color:var(--danger); font-size:22px;">0</div></div>
-            <div class="stat-card"><div class="stat-label">📦 وحدات مرتجعة</div><div class="stat-value" id="ret-units" style="font-size:22px;">0</div></div>
-          </div>
-          <div class="card">
-            <div class="card-title">تفاصيل المرتجعات</div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>رقم المرتجع</th><th>التاريخ</th><th>فاتورة أصلية</th><th>الأصناف</th><th>المبلغ المسترد</th><th>السبب</th></tr></thead>
-                <tbody id="ret-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- ABC Analysis Report -->
-        <div id="rpt-abc" class="hidden">
-          <div class="flex gap-8 mb-16" style="flex-wrap:wrap; align-items:center;">
-            <select id="rptAbcPeriod" class="form-control" style="width:170px;" onchange="buildABCReport()">
-              <option value="month" selected>هذا الشهر</option>
-              <option value="quarter">آخر 3 أشهر</option>
-              <option value="year">هذه السنة</option>
-              <option value="all">كل الوقت</option>
-            </select>
-            <select id="rptAbcBranch" class="form-control" style="width:160px;" onchange="buildABCReport()">
-              <option value="all">🏬 كل الفروع</option>
-            </select>
-            <button class="btn btn-gray btn-sm" onclick="printReport('rpt-abc')">🖨️ طباعة</button>
-          </div>
-          <!-- Legend -->
-          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
-            <div style="display:flex; align-items:center; gap:6px;"><div style="width:16px;height:16px;border-radius:4px;background:#22c55e;"></div><span style="font-size:13px;font-weight:600;">A — أعلى 70% من الإيراد</span></div>
-            <div style="display:flex; align-items:center; gap:6px;"><div style="width:16px;height:16px;border-radius:4px;background:#f59e0b;"></div><span style="font-size:13px;font-weight:600;">B — 20% التالية</span></div>
-            <div style="display:flex; align-items:center; gap:6px;"><div style="width:16px;height:16px;border-radius:4px;background:#ef4444;"></div><span style="font-size:13px;font-weight:600;">C — آخر 10%</span></div>
-            <div style="display:flex; align-items:center; gap:6px;"><div style="width:16px;height:16px;border-radius:4px;background:#94a3b8;"></div><span style="font-size:13px;font-weight:600;">💀 Dead Stock — لم يُباع</span></div>
-          </div>
-          <!-- Stats -->
-          <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); margin-bottom:16px;">
-            <div class="stat-card"><div class="stat-label" style="color:#22c55e;">A — أصناف</div><div class="stat-value" id="abc-a-count" style="font-size:22px;">0</div></div>
-            <div class="stat-card"><div class="stat-label" style="color:#f59e0b;">B — أصناف</div><div class="stat-value" id="abc-b-count" style="font-size:22px;">0</div></div>
-            <div class="stat-card"><div class="stat-label" style="color:#ef4444;">C — أصناف</div><div class="stat-value" id="abc-c-count" style="font-size:22px;">0</div></div>
-            <div class="stat-card"><div class="stat-label" style="color:#94a3b8;">💀 Dead Stock</div><div class="stat-value" id="abc-dead-count" style="font-size:22px;">0</div></div>
-          </div>
-          <div class="grid-2">
-            <div class="card">
-              <div class="card-title">📊 توزيع الفئات</div>
-              <canvas id="chartABC" height="220"></canvas>
-            </div>
-            <div class="card">
-              <div class="card-title">⚡ أسرع حركة</div>
-              <div class="table-wrap" style="max-height:220px; overflow-y:auto;">
-                <table><thead><tr><th>الصنف</th><th>المبيعات</th><th>الإيراد</th></tr></thead><tbody id="abc-fast-body"></tbody></table>
-              </div>
-            </div>
-          </div>
-          <div class="card mt-16">
-            <div class="card-title">📋 تفصيل ABC الكامل</div>
-            <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
-              <button class="btn btn-sm" id="abc-filter-all" onclick="filterABCTable('all')" style="background:#4338ca;color:white;">الكل</button>
-              <button class="btn btn-sm" id="abc-filter-A" onclick="filterABCTable('A')" style="background:#22c55e;color:white;">A</button>
-              <button class="btn btn-sm" id="abc-filter-B" onclick="filterABCTable('B')" style="background:#f59e0b;color:white;">B</button>
-              <button class="btn btn-sm" id="abc-filter-C" onclick="filterABCTable('C')" style="background:#ef4444;color:white;">C</button>
-              <button class="btn btn-sm" id="abc-filter-D" onclick="filterABCTable('D')" style="background:#94a3b8;color:white;">💀 Dead</button>
-            </div>
-            <div class="table-wrap">
-              <table><thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th><th>% من الإيراد</th><th>المخزون الحالي</th><th>الفئة</th></tr></thead><tbody id="abc-full-body"></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── COMPARE TAB ── -->
-        <div id="rpt-compare" class="hidden">
-          <div class="flex gap-8 mb-16" style="flex-wrap:wrap; align-items:center;">
-            <select id="cmpBranch" class="form-control" style="width:160px;" onchange="buildCompareReport()">
-              <option value="all">🏬 كل الفروع</option>
-            </select>
-            <button class="btn btn-gray btn-sm" onclick="printReport('rpt-compare')">🖨️ طباعة</button>
-          </div>
-
-          <!-- Month vs Prev Month header -->
-          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; margin-bottom:20px; border:1px solid var(--border); border-radius:12px; overflow:hidden; font-size:12px; text-align:center;">
-            <div style="background:#f8fafc; padding:10px; font-weight:700; color:var(--text-muted); border-left:1px solid var(--border);">المؤشر</div>
-            <div style="background:#f8fafc; padding:10px; font-weight:700; border-left:1px solid var(--border);" id="cmp-this-header">الشهر الحالي</div>
-            <div style="background:#f8fafc; padding:10px; font-weight:700;">الشهر السابق</div>
-          </div>
-          <div id="cmpTableBody"></div>
-
-          <!-- 6-month trend chart -->
-          <div class="grid-2" style="gap:16px; margin-top:20px;">
-            <div class="card">
-              <div class="card-title">📉 إيرادات آخر 6 أشهر</div>
-              <canvas id="chartCmpTrend" height="200"></canvas>
-            </div>
-            <div class="card">
-              <div class="card-title">🏬 مقارنة الفروع — الشهر الحالي</div>
-              <canvas id="chartCmpBranches" height="200"></canvas>
-            </div>
           </div>
         </div>
 
@@ -2799,8 +2714,7 @@ function switchReport(name, tab) {
   if (name==='kpi')       buildKPIReport();
   if (name==='sellers')   buildSellersReport();
   if (name==='returns')   buildReturnsReport();
-  if (name==='abc')       buildABCReport();
-  if (name==='compare')   buildCompareReport();
+
 }
 
 function populateSellerFilter(selId) {
@@ -6975,6 +6889,57 @@ function renderCategoryReport() {
   html2 += buildTable(famMap, 'تقرير حسب المجموعة (Family)', '📦');
   pane.innerHTML = html2;
 }
+
+// BULK CATEGORY / FAMILY UPDATER
+function openBulkCategoryModal() {
+  var inv  = getInv();
+  var cats = ['','cookware','kitchenware','dining','SDA','textile'];
+  var fams = ['','Ahram','Ahram Home','Import','Local'];
+  var rows = '';
+  inv.forEach(function(p,i) {
+    var catOpts = cats.map(function(v){ return '<option value="'+v+'" '+(((p.category||'')===(v))?'selected':'')+'>'+( v||'— اختر الفئة —')+'</option>'; }).join('');
+    var famOpts = fams.map(function(v){ return '<option value="'+v+'" '+(((p.family||'')===(v))?'selected':'')+'>'+( v||'— اختر المجموعة —')+'</option>'; }).join('');
+    rows += '<tr style="border-bottom:1px solid var(--border);">';
+    rows += '<td style="padding:6px 8px;font-size:12px;"><strong>'+p.code+'</strong></td>';
+    rows += '<td style="padding:6px 8px;font-size:12px;">'+p.name+'</td>';
+    rows += '<td style="padding:4px 6px;"><select id="bcat_'+i+'" style="width:100%;font-size:12px;padding:4px;border:1px solid var(--border);border-radius:6px;">'+catOpts+'</select></td>';
+    rows += '<td style="padding:4px 6px;"><select id="bfam_'+i+'" style="width:100%;font-size:12px;padding:4px;border:1px solid var(--border);border-radius:6px;">'+famOpts+'</select></td>';
+    rows += '</tr>';
+  });
+  document.getElementById('bulkCatBody').innerHTML = rows;
+  document.getElementById('bulkCatModal').dataset.count = inv.length;
+  document.getElementById('bulkCatModal').classList.remove('hidden');
+}
+
+function saveBulkCategories() {
+  var inv     = getInv();
+  var changed = 0;
+  inv.forEach(function(p, i) {
+    var catEl = document.getElementById('bcat_' + i);
+    var famEl = document.getElementById('bfam_' + i);
+    if (!catEl || !famEl) return;
+    if (catEl.value !== (p.category||'') || famEl.value !== (p.family||'')) {
+      p.category = catEl.value;
+      p.family   = famEl.value;
+      changed++;
+    }
+  });
+  if (changed > 0) { setInv(inv); renderInventory(); }
+  document.getElementById('bulkCatModal').classList.add('hidden');
+  alert(changed > 0 ? ('تم تحديث ' + changed + ' منتج') : 'لا يوجد تغييرات');
+}
+
+function filterUnclassified() {
+  var rows    = document.getElementById('bulkCatBody').querySelectorAll('tr');
+  var showAll = document.getElementById('bulkShowAll').checked;
+  rows.forEach(function(row) {
+    if (showAll) { row.style.display = ''; return; }
+    var sels = row.querySelectorAll('select');
+    var nocat = sels[0] && !sels[0].value;
+    var nofam = sels[1] && !sels[1].value;
+    row.style.display = (nocat || nofam) ? '' : 'none';
+  });
+}
 </script>
 
 <!-- ===================== CUSTOMER MODAL ===================== -->
@@ -7368,6 +7333,39 @@ function renderCategoryReport() {
     <div class="modal-footer">
       <button class="btn btn-gray" onclick="document.getElementById('attendanceEditModal').classList.add('hidden')">إلغاء</button>
       <button class="btn btn-primary" onclick="saveAttendanceEdit()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK CATEGORY MODAL -->
+<div id="bulkCatModal" class="modal-overlay hidden">
+  <div class="modal" style="width:700px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h2 style="margin:0;">🏷️ تحديث الفئات والمجموعات</h2>
+      <button class="btn btn-gray btn-sm" onclick="document.getElementById('bulkCatModal').classList.add('hidden')">✕ إغلاق</button>
+    </div>
+    <div style="background:#eff6ff;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#1e40af;">
+      💡 غيّر الفئة والمجموعة لأي منتج بدون المساس بالكمية أو الأسعار — ثم اضغط حفظ مرة واحدة
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="bulkShowAll" checked onchange="filterUnclassified()" style="width:16px;height:16px;" />
+        عرض كل المنتجات
+      </label>
+      <span style="font-size:12px;color:var(--text-muted);">— أزل التحديد لعرض غير المصنفة فقط</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:var(--sidebar);color:white;">
+        <th style="padding:8px;text-align:right;width:90px;">الكود</th>
+        <th style="padding:8px;text-align:right;">اسم المنتج</th>
+        <th style="padding:8px;text-align:center;width:170px;">الفئة (Category)</th>
+        <th style="padding:8px;text-align:center;width:170px;">المجموعة (Family)</th>
+      </tr></thead>
+      <tbody id="bulkCatBody"></tbody>
+    </table>
+    <div class="modal-footer" style="margin-top:14px;">
+      <button class="btn btn-gray" onclick="document.getElementById('bulkCatModal').classList.add('hidden')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveBulkCategories()">💾 حفظ التغييرات</button>
     </div>
   </div>
 </div>
