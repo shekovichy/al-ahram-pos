@@ -812,6 +812,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
             <button class="btn btn-success" onclick="openProductModal()">➕ إضافة منتج</button>
             <button class="btn btn-outline" onclick="exportInventoryExcel()">📥 تصدير Excel</button>
             <button class="btn btn-outline" onclick="openBulkCategoryModal()" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;">🏷️ تحديث الفئات</button>
+            <button class="btn btn-outline" onclick="openVlookupModal()" style="background:#f0fdf4;color:#15803d;border-color:#bbf7d0;">🔗 VLOOKUP من Excel</button>
             <button class="btn btn-outline" onclick="openBarcodeModal()">🏷️ طباعة باركود / أسعار</button>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -6940,6 +6941,180 @@ function filterUnclassified() {
     row.style.display = (nocat || nofam) ? '' : 'none';
   });
 }
+
+// ══════════════════════════════════════════════
+// VLOOKUP FROM EXCEL
+// ══════════════════════════════════════════════
+var _vlData    = [];  // parsed rows from uploaded file
+var _vlHeaders = [];  // column headers
+
+function openVlookupModal() {
+  _vlData = []; _vlHeaders = [];
+  document.getElementById('vlFile').value = '';
+  document.getElementById('vlStep1').classList.remove('hidden');
+  document.getElementById('vlStep2').classList.add('hidden');
+  document.getElementById('vlStep3').classList.add('hidden');
+  document.getElementById('vlookupModal').classList.remove('hidden');
+}
+
+function handleVlFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb   = XLSX.read(e.target.result, {type:'binary'});
+      var ws   = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if (!rows.length) { alert('الملف فارغ أو غير مقروء'); return; }
+      _vlData    = rows;
+      _vlHeaders = Object.keys(rows[0]);
+      buildVlMappingUI();
+    } catch(ex) { alert('خطأ في قراءة الملف: ' + ex.message); }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function buildVlMappingUI() {
+  document.getElementById('vlStep1').classList.add('hidden');
+  document.getElementById('vlStep2').classList.remove('hidden');
+  document.getElementById('vlStep3').classList.add('hidden');
+
+  var opts = '<option value="">— اختر عمود —</option>' + _vlHeaders.map(function(h){ return '<option value="'+h+'">'+h+'</option>'; }).join('');
+  var optsWithSkip = '<option value="">⛔ لا تستورد</option>' + _vlHeaders.map(function(h){ return '<option value="'+h+'">'+h+'</option>'; }).join('');
+
+  document.getElementById('vlKeyCol').innerHTML   = opts;
+  document.getElementById('vlCostCol').innerHTML  = optsWithSkip;
+  document.getElementById('vlPriceBeforeCol').innerHTML = optsWithSkip;
+  document.getElementById('vlPriceAfterCol').innerHTML  = optsWithSkip;
+  document.getElementById('vlCategoryCol').innerHTML    = optsWithSkip;
+  document.getElementById('vlFamilyCol').innerHTML      = optsWithSkip;
+
+  // Auto-detect common column names
+  var autoMatch = {
+    vlKeyCol:         ['code','كود','الكود','sku','barcode','item code','كود المنتج'],
+    vlCostCol:        ['cost','تكلفة','التكلفة','buying price','buy price','سعر الشراء'],
+    vlPriceBeforeCol: ['price before','pricebefore','السعر قبل','قبل','old price','before'],
+    vlPriceAfterCol:  ['price after','priceafter','السعر بعد','بعد','price','السعر','after'],
+    vlCategoryCol:    ['category','الفئة','فئة','كاتيجورى','كاتيجوري','cat'],
+    vlFamilyCol:      ['family','المجموعة','مجموعة','فاميلى','فاميلي','fam']
+  };
+  Object.keys(autoMatch).forEach(function(selId) {
+    var sel = document.getElementById(selId);
+    var keywords = autoMatch[selId];
+    _vlHeaders.forEach(function(h) {
+      if (keywords.indexOf(h.toLowerCase().trim()) !== -1) {
+        sel.value = h;
+      }
+    });
+  });
+
+  document.getElementById('vlFileInfo').textContent = _vlData.length + ' صف • ' + _vlHeaders.length + ' عمود';
+}
+
+function previewVlookup() {
+  var keyCol = document.getElementById('vlKeyCol').value;
+  if (!keyCol) { alert('اختر عمود الكود أولاً'); return; }
+
+  var mapping = {
+    cost:        document.getElementById('vlCostCol').value,
+    priceBefore: document.getElementById('vlPriceBeforeCol').value,
+    priceAfter:  document.getElementById('vlPriceAfterCol').value,
+    category:    document.getElementById('vlCategoryCol').value,
+    family:      document.getElementById('vlFamilyCol').value
+  };
+
+  var hasAnyMapping = Object.values(mapping).some(function(v){ return v !== ''; });
+  if (!hasAnyMapping) { alert('اختر على الأقل حقل واحد للاستيراد'); return; }
+
+  var inv = getInv();
+  var results = [];
+
+  _vlData.forEach(function(row) {
+    var keyVal = String(row[keyCol]||'').trim();
+    if (!keyVal) return;
+    var prod = inv.find(function(p){ return p.code === keyVal || p.code.toLowerCase() === keyVal.toLowerCase(); });
+    var changes = {};
+    var hasChange = false;
+
+    if (mapping.cost && row[mapping.cost] !== '') {
+      var v = parseFloat(row[mapping.cost]);
+      if (!isNaN(v) && v !== (prod ? prod.cost : null)) { changes.cost = v; hasChange = true; }
+    }
+    if (mapping.priceBefore && row[mapping.priceBefore] !== '') {
+      var v = parseFloat(row[mapping.priceBefore]);
+      if (!isNaN(v) && v !== (prod ? prod.priceBefore : null)) { changes.priceBefore = v; hasChange = true; }
+    }
+    if (mapping.priceAfter && row[mapping.priceAfter] !== '') {
+      var v = parseFloat(row[mapping.priceAfter]);
+      if (!isNaN(v) && v !== (prod ? prod.priceAfter : null)) { changes.priceAfter = v; hasChange = true; }
+    }
+    if (mapping.category && row[mapping.category] !== '') {
+      var v = String(row[mapping.category]).trim();
+      if (v !== (prod ? (prod.category||'') : null)) { changes.category = v; hasChange = true; }
+    }
+    if (mapping.family && row[mapping.family] !== '') {
+      var v = String(row[mapping.family]).trim();
+      if (v !== (prod ? (prod.family||'') : null)) { changes.family = v; hasChange = true; }
+    }
+
+    results.push({ keyVal:keyVal, prod:prod||null, changes:changes, hasChange:hasChange, found:!!prod });
+  });
+
+  // Show preview
+  document.getElementById('vlStep2').classList.add('hidden');
+  document.getElementById('vlStep3').classList.remove('hidden');
+
+  var matched   = results.filter(function(r){ return r.found && r.hasChange; });
+  var notFound  = results.filter(function(r){ return !r.found; });
+  var noChange  = results.filter(function(r){ return r.found && !r.hasChange; });
+
+  document.getElementById('vlPreviewStats').innerHTML =
+    '<span style="background:#dcfce7;color:#15803d;padding:3px 10px;border-radius:12px;font-size:13px;margin:0 4px;">✅ سيتم تحديث: '+matched.length+' منتج</span>' +
+    '<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:12px;font-size:13px;margin:0 4px;">❌ غير موجود: '+notFound.length+'</span>' +
+    '<span style="background:#f3f4f6;color:#374151;padding:3px 10px;border-radius:12px;font-size:13px;margin:0 4px;">➖ لا تغيير: '+noChange.length+'</span>';
+
+  var fieldLabel = {cost:'التكلفة', priceBefore:'السعر قبل', priceAfter:'السعر بعد', category:'الفئة', family:'المجموعة'};
+  var tbody = '';
+  matched.forEach(function(r) {
+    var changesHtml = Object.entries(r.changes).map(function(e){
+      var lbl = fieldLabel[e[0]] || e[0];
+      var old = r.prod ? (r.prod[e[0]]||'—') : '—';
+      return '<div style="font-size:11px;"><span style="color:var(--text-muted);">'+lbl+':</span> <span style="text-decoration:line-through;color:#dc2626;">'+old+'</span> → <strong style="color:#15803d;">'+e[1]+'</strong></div>';
+    }).join('');
+    tbody += '<tr style="border-bottom:1px solid var(--border);">';
+    tbody += '<td style="padding:8px;font-weight:700;font-size:13px;">'+r.keyVal+'</td>';
+    tbody += '<td style="padding:8px;font-size:13px;">'+(r.prod?r.prod.name:'')+'</td>';
+    tbody += '<td style="padding:8px;">'+changesHtml+'</td>';
+    tbody += '</tr>';
+  });
+  if (notFound.length) {
+    notFound.forEach(function(r){
+      tbody += '<tr style="border-bottom:1px solid var(--border);opacity:.5;">';
+      tbody += '<td style="padding:8px;font-size:13px;">'+r.keyVal+'</td>';
+      tbody += '<td colspan="2" style="padding:8px;font-size:12px;color:#dc2626;">❌ غير موجود في المخزون</td>';
+      tbody += '</tr>';
+    });
+  }
+  document.getElementById('vlPreviewBody').innerHTML = tbody || '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted);">لا توجد تغييرات</td></tr>';
+
+  // store for apply
+  document.getElementById('vlApplyBtn').onclick = function() { applyVlookup(matched); };
+}
+
+function applyVlookup(matched) {
+  if (!matched || !matched.length) { alert('لا توجد تغييرات للتطبيق'); return; }
+  var inv = getInv();
+  matched.forEach(function(r) {
+    var prod = inv.find(function(p){ return p.code === r.keyVal || p.code.toLowerCase() === r.keyVal.toLowerCase(); });
+    if (!prod) return;
+    Object.keys(r.changes).forEach(function(field){ prod[field] = r.changes[field]; });
+  });
+  setInv(inv);
+  renderInventory();
+  document.getElementById('vlookupModal').classList.add('hidden');
+  alert('تم تحديث ' + matched.length + ' منتج بنجاح');
+}
 </script>
 
 <!-- ===================== CUSTOMER MODAL ===================== -->
@@ -7367,6 +7542,90 @@ function filterUnclassified() {
       <button class="btn btn-gray" onclick="document.getElementById('bulkCatModal').classList.add('hidden')">إلغاء</button>
       <button class="btn btn-primary" onclick="saveBulkCategories()">💾 حفظ التغييرات</button>
     </div>
+  </div>
+</div>
+
+<!-- VLOOKUP FROM EXCEL MODAL -->
+<div id="vlookupModal" class="modal-overlay hidden">
+  <div class="modal" style="width:680px;max-height:92vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0;">🔗 VLOOKUP من Excel</h2>
+      <button class="btn btn-gray btn-sm" onclick="document.getElementById('vlookupModal').classList.add('hidden')">✕ إغلاق</button>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div id="vlStep1">
+      <div style="border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;background:var(--bg-secondary);">
+        <div style="font-size:36px;margin-bottom:10px;">📂</div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:6px;">ارفع ملف Excel بتاعك</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">يكفي فيه عمود الكود + الحقول اللي عايز تحدثها</div>
+        <label style="cursor:pointer;">
+          <input type="file" id="vlFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleVlFile(this)" />
+          <span class="btn btn-primary" style="font-size:14px;">📂 اختر الملف</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Step 2: Map columns -->
+    <div id="vlStep2" class="hidden">
+      <div style="background:#dcfce7;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#15803d;">
+        ✅ تم قراءة الملف — <span id="vlFileInfo"></span>
+      </div>
+      <div style="background:white;border-radius:10px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+        <div style="font-weight:700;margin-bottom:14px;">🔗 ربط الأعمدة</div>
+        <div class="grid-2" style="gap:12px;">
+          <div class="form-group" style="margin:0;grid-column:1/-1;">
+            <label style="font-weight:700;color:var(--primary);">🔑 عمود المفتاح (كود المنتج) *</label>
+            <select class="form-control" id="vlKeyCol"></select>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">الكود اللي بيتطابق مع كود المنتج في السيستم</div>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>💰 التكلفة (Cost)</label>
+            <select class="form-control" id="vlCostCol"></select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>🏷️ السعر قبل</label>
+            <select class="form-control" id="vlPriceBeforeCol"></select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>💵 السعر بعد (البيع)</label>
+            <select class="form-control" id="vlPriceAfterCol"></select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>🏷️ الفئة (Category)</label>
+            <select class="form-control" id="vlCategoryCol"></select>
+          </div>
+          <div class="form-group" style="margin:0;grid-column:1/-1;">
+            <label>📦 المجموعة (Family)</label>
+            <select class="form-control" id="vlFamilyCol"></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="margin-top:14px;">
+        <button class="btn btn-gray" onclick="openVlookupModal()">↩ ارفع ملف آخر</button>
+        <button class="btn btn-primary" onclick="previewVlookup()">👁️ معاينة التغييرات</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Preview & Apply -->
+    <div id="vlStep3" class="hidden">
+      <div id="vlPreviewStats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
+      <div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);max-height:380px;overflow-y:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:var(--sidebar);color:white;position:sticky;top:0;">
+            <th style="padding:10px 8px;text-align:right;width:100px;">الكود</th>
+            <th style="padding:10px 8px;text-align:right;">اسم المنتج</th>
+            <th style="padding:10px 8px;text-align:right;">التغييرات</th>
+          </tr></thead>
+          <tbody id="vlPreviewBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer" style="margin-top:14px;">
+        <button class="btn btn-gray" onclick="buildVlMappingUI()">↩ تعديل الربط</button>
+        <button id="vlApplyBtn" class="btn btn-primary" style="background:#15803d;">✅ تطبيق التغييرات</button>
+      </div>
+    </div>
+
   </div>
 </div>
 </body>
