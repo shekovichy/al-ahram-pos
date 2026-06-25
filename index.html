@@ -1739,13 +1739,24 @@ body.pos-fullscreen #cartFab { z-index:700; }
       <div class="form-group"><label>الكمية</label><input class="form-control" type="number" id="pm-qty" placeholder="0" min="0" /></div>
       <div class="form-group">
         <label>الفئة (Category)</label>
-        <input class="form-control" id="pm-category" placeholder="مثال: أثاث" list="categoryList" autocomplete="off" />
-        <datalist id="categoryList"></datalist>
+        <select class="form-control" id="pm-category">
+          <option value="">— اختر الفئة —</option>
+          <option value="cookware">Cookware</option>
+          <option value="kitchenware">Kitchenware</option>
+          <option value="dining">Dining</option>
+          <option value="SDA">SDA</option>
+          <option value="textile">Textile</option>
+        </select>
       </div>
       <div class="form-group">
         <label>المجموعة (Family)</label>
-        <input class="form-control" id="pm-family" placeholder="مثال: كراسي" list="familyList" autocomplete="off" />
-        <datalist id="familyList"></datalist>
+        <select class="form-control" id="pm-family">
+          <option value="">— اختر المجموعة —</option>
+          <option value="Ahram">Ahram</option>
+          <option value="Ahram Home">Ahram Home</option>
+          <option value="Import">Import</option>
+          <option value="Local">Local</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
@@ -2594,12 +2605,6 @@ function openProductModal(p) {
   document.getElementById('pm-qty').value         = p ? p.qty : '';
   document.getElementById('pm-category').value    = p ? (p.category||'') : '';
   document.getElementById('pm-family').value      = p ? (p.family||'') : '';
-  const _allCats = [...new Set(getInv().map(x=>x.category).filter(Boolean))];
-  const _allFams = [...new Set(getInv().map(x=>x.family).filter(Boolean))];
-  const _clEl = document.getElementById('categoryList');
-  const _flEl = document.getElementById('familyList');
-  if (_clEl) _clEl.innerHTML = _allCats.map(c=>`<option value="${c}">`).join('');
-  if (_flEl) _flEl.innerHTML = _allFams.map(f=>`<option value="${f}">`).join('');
   document.getElementById('productModal').classList.remove('hidden');
 }
 
