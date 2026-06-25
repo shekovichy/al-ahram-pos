@@ -622,6 +622,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
         <span id="suspendedBadge" class="hidden" style="background:#1a5faf;color:white;border-radius:10px;font-size:9px;padding:1px 5px;margin-right:2px;"></span>
       </button>
       <button class="nav-item"        data-page="reports"    onclick="showPage('reports')"><span class="nav-icon">📈</span>التقارير</button>
+      <button class="nav-item"        data-page="customized" onclick="showPage('customized')"><span class="nav-icon">📊</span>Customized</button>
       <button class="nav-item"        data-page="customers"  onclick="showPage('customers')"><span class="nav-icon">👥</span>العملاء</button>
       <button class="nav-item"        data-page="promos"     onclick="showPage('promos')" id="promosNavBtn"><span class="nav-icon">🏷️</span>العروض</button>
       <button class="nav-item"        data-page="transfers"  onclick="showPage('transfers')"><span class="nav-icon">🔄</span>التحويلات</button>
@@ -1121,21 +1122,30 @@ body.pos-fullscreen #cartFab { z-index:700; }
           </div>
         </div>
 
-        <!-- ══ VLOOKUP SECTION ══ -->
-        <div style="margin-top:24px;">
-          <h3 style="font-size:16px;font-weight:800;margin-bottom:12px;">🔗 تقارير ربط الجداول (VLOOKUP)</h3>
-          <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-secondary);padding:4px;border-radius:10px;flex-wrap:wrap;">
-            <button id="vlTab_supplier" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;background:white;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);" onclick="showVLTab('supplier')">🏭 الموردين × الإيراد</button>
-            <button id="vlTab_catreport" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;" onclick="showVLTab('catreport')">🏷️ تقرير الفئات والمجموعات</button>
-            <button id="vlTab_customer" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;" onclick="showVLTab('customer')">👥 فئات العملاء × المنتجات</button>
-            <button id="vlTab_turnover" class="btn" style="font-size:13px;padding:6px 14px;border-radius:7px;" onclick="showVLTab('turnover')">🔄 دوران المخزون</button>
-          </div>
-          <div id="vlPane_supplier"></div>
-          <div id="vlPane_catreport" class="hidden"></div>
-          <div id="vlPane_customer" class="hidden"></div>
-          <div id="vlPane_turnover" class="hidden"></div>
-        </div>
 
+
+      </div>
+
+      <!-- ══ CUSTOMIZED REPORTS ══ -->
+      <div id="page-customized" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+          <h2 style="margin:0;font-size:18px;font-weight:800;">📊 Customized Reports</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select id="custRptPeriod" class="form-control" style="width:150px;" onchange="onCustPeriodChange()">
+              <option value="today">اليوم</option>
+              <option value="week">هذا الأسبوع</option>
+              <option value="month" selected>هذا الشهر</option>
+              <option value="year">هذه السنة</option>
+              <option value="custom">مخصص</option>
+            </select>
+            <span id="custRptCustomDates" class="hidden" style="display:flex;gap:6px;">
+              <input type="date" id="custRptFrom" class="form-control" style="width:145px;" onchange="renderCustomizedPage()" />
+              <input type="date" id="custRptTo"   class="form-control" style="width:145px;" onchange="renderCustomizedPage()" />
+            </span>
+            <button class="btn btn-primary btn-sm" onclick="renderCustomizedPage()">🔄 تحديث</button>
+          </div>
+        </div>
+        <div id="custRptContent"></div>
       </div>
 
       <!-- ── SUSPENDED BILLS ── -->
@@ -2217,13 +2227,13 @@ function closeModal(id) {
 // MANAGER PAGES
 // ══════════════════════════════════════════════
 function showPage(page) {
-  ['dashboard','inventory','sales','suspended','reports','settings','customers','promos','transfers','purchases','hr','expenses','audit','accounting'].forEach(p => {
+  ['dashboard','inventory','sales','suspended','reports','customized','settings','customers','promos','transfers','purchases','hr','expenses','audit','accounting'].forEach(p => {
     document.getElementById('page-'+p)?.classList.add('hidden');
   });
   document.getElementById('page-'+page).classList.remove('hidden');
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-  const titles = { dashboard:'الرئيسية', inventory:'إدارة المخزون', sales:'سجل المبيعات', suspended:'فواتير معلقة', reports:'التقارير', settings:'الإعدادات', customers:'العملاء', purchases:'المشتريات', hr:'الموارد البشرية', expenses:'المصاريف', audit:'سجل التغييرات', accounting:'المحاسبة الرسمية' };
+  const titles = { dashboard:'الرئيسية', inventory:'إدارة المخزون', sales:'سجل المبيعات', suspended:'فواتير معلقة', reports:'التقارير', customized:'تقارير مخصصة', settings:'الإعدادات', customers:'العملاء', purchases:'المشتريات', hr:'الموارد البشرية', expenses:'المصاريف', audit:'سجل التغييرات', accounting:'المحاسبة الرسمية' };
   document.getElementById('pageTitle').textContent = titles[page] || '';
   if (page === 'dashboard')  buildDashboard();
   if (page === 'inventory')  renderInventory();
@@ -2237,6 +2247,7 @@ function showPage(page) {
   if (page === 'purchases')  renderPurchasesPage();
   if (page === 'hr')         renderHRPage();
   if (page === 'accounting') renderAccountingPage();
+  if (page === 'customized') renderCustomizedPage();
   if (page === 'expenses')   renderExpensesPage();
   if (page === 'audit')      renderAuditPage();
 }
@@ -6816,25 +6827,40 @@ function renderInventoryTurnover() {
 }
 
 // ── Category / Family Sales Report ────────────────────────────────
-function renderCategoryReport() {
-  var pane = document.getElementById('vlPane_catreport');
+function renderCategoryReport(fromDate, toDate) {
+  var pane = document.getElementById('custRptContent');
   if (!pane) return;
-  var products = (typeof getInventory==='function') ? getInventory() : DB.g('inventory',[]);
-  var allSales = getSales().filter(function(s){return !s.isReturn;});
 
-  // Build maps
+  var allProducts = getInv();
+  // Also collect products across branches for better category lookup
+  var productMap = {};
+  allProducts.forEach(function(p){ if(p.code) productMap[p.code] = p; });
+  // fallback: also try other branches
+  ['b1','b2','b3','b4'].forEach(function(b){
+    var brInv = _invCacheByBranch[b] || [];
+    brInv.forEach(function(p){ if(p.code && !productMap[p.code]) productMap[p.code] = p; });
+  });
+
+  var allSales = getSales().filter(function(s){ return !s.isReturn; });
+
+  // Date filter
+  if (fromDate) allSales = allSales.filter(function(s){ return s.date && s.date.slice(0,10) >= fromDate; });
+  if (toDate)   allSales = allSales.filter(function(s){ return s.date && s.date.slice(0,10) <= toDate; });
+
   var catMap = {}, famMap = {};
   allSales.forEach(function(sale) {
     (sale.items||[]).forEach(function(item) {
-      var prod = products.find(function(p){return p.code===item.code;});
-      var cat  = (prod&&prod.category) ? prod.category : (item.category||'غير محدد');
-      var fam  = (prod&&prod.family)   ? prod.family   : (item.family||'غير محدد');
-      var rev  = item.price * item.qty;
-      var cost = (item.cost||0) * item.qty;
-      var qty  = item.qty;
+      var prod = productMap[item.code] || null;
+      var cat  = (prod && prod.category) ? prod.category : (item.category || 'غير محدد');
+      var fam  = (prod && prod.family)   ? prod.family   : (item.family   || 'غير محدد');
+      var rev  = (item.price||0) * (item.qty||1);
+      var cost = (item.cost||prod&&prod.cost||0) * (item.qty||1);
+      var qty  = item.qty||1;
+
       if (!catMap[cat]) catMap[cat] = {name:cat, revenue:0, cost:0, qty:0, items:{}};
       catMap[cat].revenue += rev; catMap[cat].cost += cost; catMap[cat].qty += qty;
       catMap[cat].items[item.name] = (catMap[cat].items[item.name]||0) + qty;
+
       if (!famMap[fam]) famMap[fam] = {name:fam, revenue:0, cost:0, qty:0, items:{}};
       famMap[fam].revenue += rev; famMap[fam].cost += cost; famMap[fam].qty += qty;
       famMap[fam].items[item.name] = (famMap[fam].items[item.name]||0) + qty;
@@ -6845,50 +6871,57 @@ function renderCategoryReport() {
 
   function buildTable(map, title, icon) {
     var rows = Object.values(map).sort(function(a,b){return b.revenue-a.revenue;});
-    if (!rows.length) return '<p style="color:var(--text-muted);padding:12px;">لا توجد بيانات — تأكد من إضافة الفئة/المجموعة للمنتجات</p>';
-    var html2 = '<div style="font-size:14px;font-weight:700;margin:16px 0 10px;">'+icon+' '+title+'</div>';
-    html2 += '<div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:20px;">';
-    html2 += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-    html2 += '<thead><tr style="background:var(--sidebar);color:white;">';
-    ['الاسم','الإيراد','التكلفة','هامش%','الكمية','% من الإجمالي','أعلى منتج'].forEach(function(h){html2+='<th style="padding:8px;text-align:center;">'+h+'</th>';});
-    html2 += '</tr></thead><tbody>';
+    if (!rows.length) return '<div style="padding:20px;color:var(--text-muted);text-align:center;">لا توجد مبيعات في هذه الفترة</div>';
+    var t = '<div style="font-size:14px;font-weight:700;margin:16px 0 10px;">'+icon+' '+title+'</div>';
+    t += '<div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:20px;">';
+    t += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    t += '<thead><tr style="background:var(--sidebar);color:white;">';
+    ['الاسم','الإيراد','التكلفة','هامش %','الكمية','% من الإجمالي','أعلى منتج'].forEach(function(h){ t += '<th style="padding:9px 8px;text-align:center;">'+h+'</th>'; });
+    t += '</tr></thead><tbody>';
     rows.forEach(function(r,i) {
       var margin = r.revenue>0 ? Math.round((r.revenue-r.cost)/r.revenue*100) : 0;
       var pct    = Math.round(r.revenue/totalRev*100);
       var topItem= Object.entries(r.items).sort(function(a,b){return b[1]-a[1];})[0];
       var mg_bg  = margin>=30?'#dcfce7':margin>=15?'#fef9c3':'#fee2e2';
       var mg_tc  = margin>=30?'#15803d':margin>=15?'#854d0e':'#b91c1c';
-      var rowBg  = i%2===0?'white':'#fafafa';
-      html2 += '<tr style="border-bottom:1px solid var(--border);background:'+rowBg+';">';
-      html2 += '<td style="padding:8px;font-weight:700;">'+r.name+'</td>';
-      html2 += '<td style="padding:8px;text-align:center;font-weight:700;color:#1d4ed8;">'+fmt(r.revenue)+' ج</td>';
-      html2 += '<td style="padding:8px;text-align:center;">'+fmt(r.cost)+' ج</td>';
-      html2 += '<td style="padding:8px;text-align:center;"><span style="background:'+mg_bg+';color:'+mg_tc+';padding:2px 8px;border-radius:12px;font-size:11px;">'+margin+'%</span></td>';
-      html2 += '<td style="padding:8px;text-align:center;">'+r.qty+'</td>';
-      html2 += '<td style="padding:8px;text-align:center;">';
-      html2 += '<div style="background:var(--bg-secondary);border-radius:4px;height:6px;margin-bottom:2px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+Math.min(pct,100)+'%;"></div></div>';
-      html2 += '<span style="font-size:11px;">'+pct+'%</span></td>';
-      html2 += '<td style="padding:8px;text-align:center;font-size:12px;">'+(topItem?topItem[0]+' (×'+topItem[1]+')':'-')+'</td>';
-      html2 += '</tr>';
+      t += '<tr style="border-bottom:1px solid var(--border);background:'+(i%2===0?'white':'#fafafa')+'">';
+      t += '<td style="padding:8px 10px;font-weight:700;">'+r.name+'</td>';
+      t += '<td style="padding:8px;text-align:center;font-weight:700;color:#1d4ed8;">'+fmt(r.revenue)+' ج</td>';
+      t += '<td style="padding:8px;text-align:center;">'+fmt(r.cost)+' ج</td>';
+      t += '<td style="padding:8px;text-align:center;"><span style="background:'+mg_bg+';color:'+mg_tc+';padding:2px 8px;border-radius:12px;font-size:11px;">'+margin+'%</span></td>';
+      t += '<td style="padding:8px;text-align:center;">'+r.qty+'</td>';
+      t += '<td style="padding:8px;text-align:center;">';
+      t += '<div style="background:var(--bg-secondary);border-radius:4px;height:6px;margin-bottom:2px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+Math.min(pct,100)+'%;"></div></div>';
+      t += '<span style="font-size:11px;">'+pct+'%</span></td>';
+      t += '<td style="padding:8px;text-align:center;font-size:12px;">'+(topItem?topItem[0]+' (x'+topItem[1]+')':'-')+'</td>';
+      t += '</tr>';
     });
-    html2 += '</tbody></table></div>';
-    return html2;
+    t += '</tbody></table></div>';
+    return t;
   }
 
-  // KPI cards
-  var totalCost  = Object.values(catMap).reduce(function(s,x){return s+x.cost;},0);
-  var totalMargin= totalRev>0?Math.round((totalRev-totalCost)/totalRev*100):0;
-  var catCount   = Object.keys(catMap).length;
-  var famCount   = Object.keys(famMap).length;
+  var totalCost   = Object.values(catMap).reduce(function(s,x){return s+x.cost;},0);
+  var totalMargin = totalRev>0 ? Math.round((totalRev-totalCost)/totalRev*100) : 0;
+  var catCount    = Object.keys(catMap).length;
+  var famCount    = Object.keys(famMap).length;
+  var salesCount  = allSales.length;
 
-  var html2 = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">';
-  [{l:'إجمالي الإيراد',v:fmt(totalRev)+' ج',bg:'#eff6ff',tc:'#1d4ed8'},{l:'هامش الربح',v:totalMargin+'%',bg:'#dcfce7',tc:'#15803d'},{l:'عدد الفئات',v:catCount,bg:'#fef9c3',tc:'#854d0e'},{l:'عدد المجموعات',v:famCount,bg:'#fde8d0',tc:'#9a3412'}].forEach(function(k){
-    html2 += '<div style="background:'+k.bg+';border-radius:8px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:'+k.tc+';">'+k.v+'</div><div style="font-size:11px;color:var(--text-muted);">'+k.l+'</div></div>';
+  var out = '';
+  // KPI row
+  out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;">';
+  [{l:'إيراد الفترة',v:fmt(totalRev)+' ج',bg:'#eff6ff',tc:'#1d4ed8'},
+   {l:'هامش الربح',  v:totalMargin+'%',   bg:'#dcfce7',tc:'#15803d'},
+   {l:'عدد الفواتير',v:salesCount,        bg:'#f5f3ff',tc:'#6d28d9'},
+   {l:'عدد الفئات',  v:catCount,          bg:'#fef9c3',tc:'#854d0e'},
+   {l:'عدد المجموعات',v:famCount,         bg:'#fde8d0',tc:'#9a3412'}].forEach(function(k){
+    out += '<div style="background:'+k.bg+';border-radius:8px;padding:12px;text-align:center;">';
+    out += '<div style="font-size:20px;font-weight:800;color:'+k.tc+';">'+k.v+'</div>';
+    out += '<div style="font-size:11px;color:var(--text-muted);">'+k.l+'</div></div>';
   });
-  html2 += '</div>';
-  html2 += buildTable(catMap, 'تقرير حسب الفئة (Category)', '🏷️');
-  html2 += buildTable(famMap, 'تقرير حسب المجموعة (Family)', '📦');
-  pane.innerHTML = html2;
+  out += '</div>';
+  out += buildTable(catMap, 'تقرير حسب الفئة (Category)', '🏷️');
+  out += buildTable(famMap, 'تقرير حسب المجموعة (Family)', '📦');
+  pane.innerHTML = out;
 }
 
 // BULK CATEGORY / FAMILY UPDATER
@@ -7114,6 +7147,54 @@ function applyVlookup(matched) {
   renderInventory();
   document.getElementById('vlookupModal').classList.add('hidden');
   alert('تم تحديث ' + matched.length + ' منتج بنجاح');
+}
+
+// ══════════════════════════════════════════
+// CUSTOMIZED REPORTS PAGE
+// ══════════════════════════════════════════
+function getDateRangeForPeriod(period) {
+  var now = new Date();
+  var from, to;
+  to = now.toISOString().slice(0,10);
+  if (period === 'today') {
+    from = to;
+  } else if (period === 'week') {
+    var d = new Date(now); d.setDate(d.getDate() - d.getDay());
+    from = d.toISOString().slice(0,10);
+  } else if (period === 'month') {
+    from = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-01';
+  } else if (period === 'year') {
+    from = now.getFullYear() + '-01-01';
+  } else {
+    return null; // custom
+  }
+  return {from: from, to: to};
+}
+
+function onCustPeriodChange() {
+  var period = document.getElementById('custRptPeriod')?.value;
+  var customDiv = document.getElementById('custRptCustomDates');
+  if (period === 'custom') {
+    customDiv.classList.remove('hidden');
+    customDiv.style.display = 'flex';
+  } else {
+    customDiv.classList.add('hidden');
+  }
+  renderCustomizedPage();
+}
+
+function renderCustomizedPage() {
+  var period = document.getElementById('custRptPeriod')?.value || 'month';
+  var from, to;
+  if (period === 'custom') {
+    from = document.getElementById('custRptFrom')?.value || '';
+    to   = document.getElementById('custRptTo')?.value   || '';
+  } else {
+    var range = getDateRangeForPeriod(period);
+    from = range ? range.from : '';
+    to   = range ? range.to   : '';
+  }
+  renderCategoryReport(from, to);
 }
 </script>
 
