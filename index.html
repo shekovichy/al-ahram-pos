@@ -443,6 +443,65 @@ body.pos-fullscreen #cartFab { z-index:700; }
 .return-row td { background:#fff5f5 !important; }
 
 .main-content.home-mode { background:transparent !important; padding:0 !important; }
+
+/* ══ HOME SCREEN ══ */
+#homeWallpaper {
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 45%, #1a5faf 100%);
+  margin: -16px;
+  padding: 20px 16px 32px;
+}
+#homeStatusBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 28px;
+  padding: 0 4px;
+}
+#homeClock { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+#homeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px 16px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.app-icon {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  cursor: pointer; user-select: none;
+  transition: transform .15s ease;
+}
+.app-icon:hover  { transform: scale(1.07); }
+.app-icon:active { transform: scale(.92); }
+.app-tile {
+  width: 72px; height: 72px;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.25);
+  position: relative;
+}
+.app-tile svg { width: 36px; height: 36px; }
+.app-name {
+  color: white;
+  font-size: 11px; font-weight: 600;
+  text-align: center;
+  text-shadow: 0 1px 6px rgba(0,0,0,.8);
+  max-width: 78px; line-height: 1.35;
+}
+.main-content.home-mode { background: transparent !important; padding: 0 !important; }
+
+@media (max-width: 520px) {
+  #homeGrid { grid-template-columns: repeat(4, 1fr); gap: 18px 10px; }
+  .app-tile  { width: 60px; height: 60px; border-radius: 16px; }
+  .app-tile svg { width: 30px; height: 30px; }
+  .app-name  { font-size: 10px; max-width: 64px; }
+}
+@media (min-width: 768px) {
+  #homeGrid { grid-template-columns: repeat(6, 1fr); max-width: 860px; }
+}
 </style>
 </head>
 <body>
@@ -1282,126 +1341,135 @@ body.pos-fullscreen #cartFab { z-index:700; }
 
       <!-- ══ HOME SCREEN ══ -->
       <div id="page-home" class="hidden">
-        <!-- Wallpaper background -->
-        <div style="position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 40%,#0f4c81 70%,#1a5faf 100%);pointer-events:none;"></div>
-        <div style="position:relative;z-index:1;min-height:calc(100vh - 60px);padding:16px;">
-
-          <!-- Status bar -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 4px;">
-            <div style="color:white;font-size:13px;font-weight:600;opacity:.9;" id="homeDate"></div>
-            <div style="color:white;font-size:20px;font-weight:800;letter-spacing:1px;" id="homeClock"></div>
+        <div id="homeWallpaper">
+          <div id="homeStatusBar">
+            <span id="homeDate"></span>
+            <span id="homeClock"></span>
           </div>
+          <div id="homeGrid">
 
-          <!-- App grid -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:16px 12px;max-width:900px;margin:0 auto;">
-
-            <!-- POS / Cashier -->
-            <div onclick="switchToCashier()" class="home-app-icon" title="الكاشير">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#1a5faf,#3b82f6);">🛒</div>
-              <div class="home-app-name">الكاشير</div>
-            </div>
-
-            <!-- Dashboard -->
-            <div onclick="showPage('dashboard')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#0f766e,#14b8a6);">📊</div>
-              <div class="home-app-name">الداشبورد</div>
-            </div>
-
-            <!-- Inventory -->
-            <div onclick="showPage('inventory')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#15803d,#22c55e);">📦</div>
-              <div class="home-app-name">المخزون</div>
-            </div>
-
-            <!-- Warehouse -->
-            <div onclick="showPage('warehouse')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#374151,#6b7280);">🏭</div>
-              <div class="home-app-name">المخزن الرئيسي</div>
-            </div>
-
-            <!-- Sales -->
-            <div onclick="showPage('sales')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#b45309,#f59e0b);">💰</div>
-              <div class="home-app-name">المبيعات</div>
-            </div>
-
-            <!-- Customers -->
-            <div onclick="showPage('customers')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#6d28d9,#a78bfa);">👥</div>
-              <div class="home-app-name">العملاء</div>
-            </div>
-
-            <!-- Reports -->
-            <div onclick="showPage('reports')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#0369a1,#38bdf8);">📈</div>
-              <div class="home-app-name">التقارير</div>
-            </div>
-
-            <!-- Customized -->
-            <div onclick="showPage('customized')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#be185d,#f472b6);">🔍</div>
-              <div class="home-app-name">Customized</div>
-            </div>
-
-            <!-- Suspended -->
-            <div onclick="showPage('suspended')" class="home-app-icon" id="homeAppSuspended">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#92400e,#fbbf24);position:relative;">
-                ⏸
-                <span id="homeSuspBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:50%;font-size:9px;min-width:16px;height:16px;line-height:16px;text-align:center;font-weight:700;">0</span>
+            <div class="app-icon" onclick="switchToCashier()">
+              <div class="app-tile" style="background:linear-gradient(145deg,#2563eb,#1d4ed8);">
+                <svg viewBox="0 0 48 48" fill="none"><circle cx="18" cy="36" r="3" fill="white"/><circle cx="34" cy="36" r="3" fill="white"/><path d="M6 8h4l5 18h18l4-12H16" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
-              <div class="home-app-name">المعلقة</div>
+              <span class="app-name">الكاشير</span>
             </div>
 
-            <!-- Promos -->
-            <div onclick="showPage('promos')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#be123c,#fb7185);">🎁</div>
-              <div class="home-app-name">العروض</div>
+            <div class="app-icon" onclick="showPage('dashboard')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#0891b2,#0e7490);">
+                <svg viewBox="0 0 48 48" fill="none"><rect x="6" y="28" width="8" height="14" rx="2" fill="white"/><rect x="20" y="18" width="8" height="24" rx="2" fill="white"/><rect x="34" y="8" width="8" height="34" rx="2" fill="white"/></svg>
+              </div>
+              <span class="app-name">الداشبورد</span>
             </div>
 
-            <!-- Purchases -->
-            <div onclick="showPage('purchases')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#a16207,#ca8a04);">🛍️</div>
-              <div class="home-app-name">المشتريات</div>
+            <div class="app-icon" onclick="showPage('inventory')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#16a34a,#15803d);">
+                <svg viewBox="0 0 48 48" fill="none"><rect x="8" y="18" width="32" height="22" rx="3" stroke="white" stroke-width="3"/><path d="M16 18V13a8 8 0 0116 0v5" stroke="white" stroke-width="3" stroke-linecap="round"/><path d="M18 28h12M24 24v8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <span class="app-name">المخزون</span>
             </div>
 
-            <!-- Transfers -->
-            <div onclick="showPage('transfers')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#0891b2,#22d3ee);">🔄</div>
-              <div class="home-app-name">التحويلات</div>
+            <div class="app-icon" onclick="showPage('warehouse')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#475569,#334155);">
+                <svg viewBox="0 0 48 48" fill="none"><path d="M6 20L24 8l18 12v20H6V20z" stroke="white" stroke-width="3" stroke-linejoin="round"/><rect x="18" y="28" width="12" height="14" rx="2" fill="white"/><rect x="14" y="20" width="8" height="8" rx="1" fill="white" opacity=".7"/><rect x="26" y="20" width="8" height="8" rx="1" fill="white" opacity=".7"/></svg>
+              </div>
+              <span class="app-name">المخزن الرئيسي</span>
             </div>
 
-            <!-- HR -->
-            <div onclick="showPage('hr')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#4338ca,#818cf8);">👔</div>
-              <div class="home-app-name">الموارد البشرية</div>
+            <div class="app-icon" onclick="showPage('sales')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#d97706,#b45309);">
+                <svg viewBox="0 0 48 48" fill="none"><rect x="8" y="10" width="32" height="28" rx="4" stroke="white" stroke-width="3"/><path d="M16 22h16M16 28h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="36" cy="14" r="6" fill="#f59e0b" stroke="white" stroke-width="2"/><path d="M33 14h6M36 11v6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <span class="app-name">المبيعات</span>
             </div>
 
-            <!-- Accounting -->
-            <div onclick="showPage('accounting')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#065f46,#10b981);">📋</div>
-              <div class="home-app-name">المحاسبة</div>
+            <div class="app-icon" onclick="showPage('customers')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#7c3aed,#6d28d9);">
+                <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="16" r="8" stroke="white" stroke-width="3"/><path d="M8 40c0-8.837 7.163-16 16-16s16 7.163 16 16" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
+              </div>
+              <span class="app-name">العملاء</span>
             </div>
 
-            <!-- Expenses -->
-            <div onclick="showPage('expenses')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#b91c1c,#f87171);">💸</div>
-              <div class="home-app-name">المصاريف</div>
+            <div class="app-icon" onclick="showPage('reports')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#0369a1,#075985);">
+                <svg viewBox="0 0 48 48" fill="none"><path d="M8 36L18 24l8 6 8-12 6 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="6" width="36" height="36" rx="4" stroke="white" stroke-width="2.5"/></svg>
+              </div>
+              <span class="app-name">التقارير</span>
             </div>
 
-            <!-- Audit -->
-            <div onclick="showPage('audit')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#475569,#94a3b8);">📝</div>
-              <div class="home-app-name">سجل التغييرات</div>
+            <div class="app-icon" onclick="showPage('customized')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#be185d,#9d174d);">
+                <svg viewBox="0 0 48 48" fill="none"><circle cx="22" cy="22" r="12" stroke="white" stroke-width="3"/><path d="M31 31l9 9" stroke="white" stroke-width="3.5" stroke-linecap="round"/><path d="M18 22h8M22 18v8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <span class="app-name">Customized</span>
             </div>
 
-            <!-- Settings -->
-            <div onclick="showPage('settings')" class="home-app-icon">
-              <div class="home-app-tile" style="background:linear-gradient(135deg,#334155,#64748b);">⚙️</div>
-              <div class="home-app-name">الإعدادات</div>
+            <div class="app-icon" onclick="showPage('suspended')" id="homeAppSuspended">
+              <div class="app-tile" style="background:linear-gradient(145deg,#92400e,#78350f);position:relative;">
+                <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="white" stroke-width="3"/><path d="M24 14v10l6 4" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span id="homeSuspBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:#ef4444;color:white;border-radius:50%;font-size:10px;min-width:18px;height:18px;line-height:18px;text-align:center;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.4);">0</span>
+              </div>
+              <span class="app-name">المعلقة</span>
             </div>
 
-          </div><!-- /grid -->
-        </div><!-- /content -->
+            <div class="app-icon" onclick="showPage('promos')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#dc2626,#b91c1c);">
+                <svg viewBox="0 0 48 48" fill="none"><path d="M20 8H10a2 2 0 00-2 2v10l20 20 12-12L20 8z" stroke="white" stroke-width="3" stroke-linejoin="round"/><circle cx="15" cy="15" r="2.5" fill="white"/></svg>
+              </div>
+              <span class="app-name">العروض</span>
+            </div>
+
+            <div class="app-icon" onclick="showPage('purchases')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#a16207,#854d0e);">
+                <svg viewBox="0 0 48 48" fill="none"><path d="M14 8h20l4 8H10l4-8z" stroke="white" stroke-width="2.5" stroke-linejoin="round"/><rect x="10" y="16" width="28" height="24" rx="3" stroke="white" stroke-width="3"/><path d="M20 26h8M24 22v8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <span class="app-name">المشتريات</span>
+            </div>
+
+            <div class="app-icon" onclick="showPage('transfers')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#0891b2,#0e7490);">
+                <svg viewBox="0 0 48 48" fill="none"><path d="M10 18h28M30 10l8 8-8 8" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M38 30H10M18 22l-8 8 8 8" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="app-name">التحويلات</span>
+            </div>
+
+            <div class="app-icon" onclick="showPage('hr')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#4338ca,#3730a3);">
+                <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="14" r="7" stroke="white" stroke-width="3"/><path d="M10 40c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="white" stroke-width="3" stroke-linecap="round"/><path d="M30 22l4 4-4 4M34 26h-6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="app-name">الموارد البشرية</span>
+            </div>
+
+            <div class="app-icon" onclick="showPage('accounting')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#047857,#065f46);">
+                <svg viewBox="0 0 48 48" fill="none"><rect x="10" y="6" width="28" height="36" rx="3" stroke="white" stroke-width="3"/><path d="M16 16h16M16 22h16M16 28h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/><path d="M30 30l3 3 5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="app-name">المحاسبة</span>
+            </div>
+
+            <div class="app-icon" onclick="showPage('expenses')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#be123c,#9f1239);">
+                <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="white" stroke-width="3"/><path d="M24 14v20M18 20c0-3.314 2.686-6 6-6s6 2.686 6 6-2.686 4-6 4-6 1.686-6 4 2.686 6 6 6 6-2.686 6-6" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <span class="app-name">المصاريف</span>
+            </div>
+
+            <div class="app-icon" onclick="showPage('audit')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#475569,#1e293b);">
+                <svg viewBox="0 0 48 48" fill="none"><rect x="10" y="6" width="28" height="36" rx="3" stroke="white" stroke-width="3"/><path d="M16 16h16M16 22h16M16 28h8" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="34" cy="34" r="6" fill="#475569" stroke="white" stroke-width="2"/><path d="M32 34l2 2 3-3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="app-name">سجل التغييرات</span>
+            </div>
+
+            <div class="app-icon" onclick="showPage('settings')">
+              <div class="app-tile" style="background:linear-gradient(145deg,#52525b,#3f3f46);">
+                <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="6" stroke="white" stroke-width="3"/><path d="M24 8v4M24 36v4M8 24h4M36 24h4M12.7 12.7l2.8 2.8M32.5 32.5l2.8 2.8M12.7 35.3l2.8-2.8M32.5 15.5l2.8-2.8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <span class="app-name">الإعدادات</span>
+            </div>
+
+          </div><!-- /homeGrid -->
+        </div><!-- /homeWallpaper -->
       </div>
 
       <!-- ── CUSTOMERS ── -->
