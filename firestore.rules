@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── POS DATA ─────────────────────────────────────────────
+    // Only authenticated users (Anonymous Auth from the app) can read/write
+    match /pos_data/{document} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── INVENTORY per branch ──────────────────────────────────
+    match /inv_{branch}/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── Deny everything else ──────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

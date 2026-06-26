@@ -12,6 +12,7 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 :root {
   --primary: #1a5faf;
@@ -2094,23 +2095,21 @@ function setSales(v) {
 }
 
 // USERS — kept in localStorage (passwords stay local)
-const getUsers = ()  => DB.g('users', { admin: 'admin123', cashier: 'cashier123' });
+const getUsers = ()  => DB.g('users', { admin: '', cashier: '' });
 function setUsers(v) {
-  DB.s('users', v);
-  if (_fbReady && _db) _db.collection('pos_data').doc('auth').set({ users: v, branchUsers: getBranchUsers(), updatedAt: Date.now() }).catch(()=>{});
+  setUsersLocal(v); // passwords NEVER go to Firestore
 }
 
 // Branch-specific cashier users (يوزر + باسورد مختلف لكل فرع)
 const DEFAULT_BRANCH_USERS = {
-  b1: { username: 'branch1', password: 'branch1' },
-  b2: { username: 'branch2', password: 'branch2' },
-  b3: { username: 'branch3', password: 'branch3' },
-  b4: { username: 'branch4', password: 'branch4' },
+  b1: { username: 'branch1', password: '' },
+  b2: { username: 'branch2', password: '' },
+  b3: { username: 'branch3', password: '' },
+  b4: { username: 'branch4', password: '' },
 };
 const getBranchUsers = () => DB.g('pos_branch_users', DEFAULT_BRANCH_USERS);
 function setBranchUsers(v) {
-  DB.s('pos_branch_users', v);
-  if (_fbReady && _db) _db.collection('pos_data').doc('auth').set({ users: getUsers(), branchUsers: v, updatedAt: Date.now() }).catch(()=>{});
+  setBranchUsersLocal(v); // passwords NEVER go to Firestore
 }
 
 // SETTINGS
@@ -2179,14 +2178,22 @@ function getDateRange(period, fromId, toId) {
 // ══════════════════════════════════════════════
 // LOGIN / LOGOUT
 // ══════════════════════════════════════════════
-function doLogin() {
+async function doLogin() {
   const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
-  let users;
-  try { users = getUsers(); } catch(e) { users = { admin: 'admin123', cashier: 'cashier123' }; }
+  const users = getUsers();
+  const branchUsers = getBranchUsers();
   document.getElementById('loginError').classList.add('hidden');
+  if (!pass) { document.getElementById('loginError').textContent = 'أدخل كلمة المرور'; document.getElementById('loginError').classList.remove('hidden'); return; }
 
-  if (user === 'admin' && pass === users.admin) {
+  // First-run: no admin password set yet → show setup
+  if (!users.admin) {
+    showFirstRunSetup();
+    return;
+  }
+
+  if (user === 'admin' && await checkPass(pass, users.admin)) {
+    await upgradePassIfNeeded(pass, users.admin, 'admin');
     currentUser = 'admin';
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('managerView').classList.remove('hidden');
@@ -2212,11 +2219,14 @@ function doLogin() {
   } else {
     // Branch-specific cashier login
     const branchUsers = getBranchUsers();
-    const matchedBranch = BRANCH_IDS.find(b =>
-      branchUsers[b] &&
-      user === (branchUsers[b].username || '').toLowerCase() &&
-      pass === branchUsers[b].password
-    );
+    let matchedBranch = null;
+    for (const b of BRANCH_IDS) {
+      if (branchUsers[b] &&
+          user === (branchUsers[b].username || '').toLowerCase() &&
+          await checkPass(pass, branchUsers[b].password)) {
+        matchedBranch = b; break;
+      }
+    }
     if (matchedBranch) {
       currentUser = 'cashier';
       currentBranch = matchedBranch;
@@ -3698,16 +3708,17 @@ function renderBranchUsersSettings() {
   }).join('');
 }
 
-function saveBranchUsers() {
+async function saveBranchUsers() {
   const bu = getBranchUsers();
-  BRANCH_IDS.forEach(b => {
+  for (const b of BRANCH_IDS) {
     const uname = document.getElementById(`bu-user-${b}`)?.value.trim();
     const upass  = document.getElementById(`bu-pass-${b}`)?.value.trim();
     if (uname && upass && upass.length >= 4) {
-      bu[b] = { username: uname, password: upass };
+      const hashed = await hashPass(upass);
+      bu[b] = { username: uname, password: hashed };
     }
-  });
-  setBranchUsers(bu);
+  }
+  setBranchUsersLocal(bu);
   showMsg('sBranchUsersMsg', '✅ تم حفظ بيانات دخول الفروع');
 }
 
@@ -3715,11 +3726,17 @@ function changePass(role) {
   const users = getUsers();
   const curr = document.getElementById('sCurrPass').value;
   const np   = document.getElementById('sNewPass').value;
-  if (curr !== users.admin) { showMsg('sAdminMsg','كلمة المرور الحالية غلط','danger'); return; }
-  if (np.length < 4)        { showMsg('sAdminMsg','يجب أن تكون 4 أحرف على الأقل','danger'); return; }
-  users.admin = np; setUsers(users);
-  showMsg('sAdminMsg','تم تغيير كلمة مرور المدير');
-  document.getElementById('sCurrPass').value = ''; document.getElementById('sNewPass').value = '';
+  checkPass(curr, users.admin).then(ok => {
+    if (!ok) { showMsg('sAdminMsg','كلمة المرور الحالية غلط','danger'); return; }
+    if (np.length < 4) { showMsg('sAdminMsg','يجب أن تكون 4 أحرف على الأقل','danger'); return; }
+    hashPass(np).then(hashed => {
+      users.admin = hashed;
+      setUsersLocal(users);
+      showMsg('sAdminMsg','✅ تم تغيير كلمة المرور');
+      document.getElementById('sCurrPass').value = '';
+      document.getElementById('sNewPass').value  = '';
+    });
+  });
 }
 
 function saveSettings() {
@@ -3808,6 +3825,32 @@ let _db            = null;
 let _fbReady       = false;
 let _suspendCache  = [];
 
+
+// ── PASSWORD SECURITY ─────────────────────────────────────────
+async function hashPass(plain) {
+  const data = new TextEncoder().encode(plain + 'voodo-pos-salt');
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return 'h:' + Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function checkPass(plain, stored) {
+  if (!stored) return false;
+  if (stored.startsWith('h:')) return stored === await hashPass(plain);
+  return plain === stored; // legacy plain text
+}
+async function upgradePassIfNeeded(plain, stored, type, branchId) {
+  if (!stored.startsWith('h:')) {
+    const hashed = await hashPass(plain);
+    if (type === 'admin') {
+      const u = getUsers(); u.admin = hashed; setUsersLocal(u);
+    } else if (type === 'branch' && branchId) {
+      const bu = getBranchUsers(); bu[branchId].password = hashed; setBranchUsersLocal(bu);
+    }
+  }
+}
+// setUsers / setBranchUsers — NEVER sync passwords to Firestore
+function setUsersLocal(v) { DB.s('users', v); }
+function setBranchUsersLocal(v) { DB.s('pos_branch_users', v); }
+
 function initFirebase() {
   const fbEl = document.getElementById('fbStatus');
 
@@ -3829,6 +3872,8 @@ function initFirebase() {
       fbEl.style.cssText = 'font-size:11px;padding:3px 8px;border-radius:10px;background:#fef3c7;color:#92400e;';
       fbEl.textContent   = 'جاري الاتصال...';
     }
+    // Anonymous auth — required for Firestore Security Rules
+    firebase.auth().signInAnonymously().catch(e => console.warn('Firebase Auth:', e.message));
 
     const visRefresh = (pageId, fn) => {
       const el = document.getElementById(pageId);
@@ -3961,7 +4006,7 @@ function initFirebase() {
         if (snap.exists) {
           const data = snap.data();
           if (data.users)       DB.s('users', data.users);
-          if (data.branchUsers) DB.s('pos_branch_users', data.branchUsers);
+          // passwords not synced from Firebase — local only
         } else {
           // First time: upload local passwords to Firestore
           _db.collection('pos_data').doc('auth').set({
@@ -7719,6 +7764,26 @@ function updateHomeClock() {
     greet.textContent = g;
   }
 }
+function showFirstRunSetup() {
+  document.getElementById('firstRunModal').classList.remove('hidden');
+  document.getElementById('loginPage').classList.add('hidden');
+}
+async function confirmFirstRun() {
+  const p1 = document.getElementById('frPass1').value;
+  const p2 = document.getElementById('frPass2').value;
+  const msg = document.getElementById('frMsg');
+  if (p1.length < 4) { msg.textContent = 'كلمة المرور قصيرة جداً (4 أحرف على الأقل)'; return; }
+  if (p1 !== p2)     { msg.textContent = 'كلمتا المرور غير متطابقتين'; return; }
+  const hashed = await hashPass(p1);
+  const users  = getUsers();
+  users.admin  = hashed;
+  setUsersLocal(users);
+  document.getElementById('firstRunModal').classList.add('hidden');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('frMsg').textContent = '';
+  showToast('✅ تم تعيين كلمة مرور المدير — سجّل الدخول الآن');
+}
+
 setInterval(updateHomeClock, 1000);
 
 </script>
@@ -8393,6 +8458,30 @@ setInterval(updateHomeClock, 1000);
       <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;">
         <button class="btn btn-outline" onclick="document.getElementById('barcodeModal').classList.add('hidden')">إلغاء</button>
         <button class="btn btn-primary" onclick="printBarcodes()">🖨️ طباعة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FIRST-RUN PASSWORD SETUP ══ -->
+  <div id="firstRunModal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:400px;width:92%;">
+      <div class="modal-header">
+        <h3 style="margin:0;font-size:17px;">🔐 إعداد كلمة مرور المدير</h3>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">أول مرة تفتح النظام — اختر كلمة مرور للمدير</p>
+        <div class="form-group">
+          <label>كلمة المرور الجديدة</label>
+          <input class="form-control" type="password" id="frPass1" placeholder="4 أحرف على الأقل" />
+        </div>
+        <div class="form-group">
+          <label>تأكيد كلمة المرور</label>
+          <input class="form-control" type="password" id="frPass2" placeholder="أعد كتابة كلمة المرور" />
+        </div>
+        <div id="frMsg" style="margin-top:8px;font-size:13px;color:var(--danger);"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" style="width:100%;" onclick="confirmFirstRun()">✅ تأكيد وبدء النظام</button>
       </div>
     </div>
   </div>
