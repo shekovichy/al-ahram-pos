@@ -716,6 +716,9 @@ body.pos-fullscreen #cartFab { z-index:700; }
         </div>
         <span id="fbStatus" style="font-size:11px; padding:3px 8px; border-radius:10px; background:#e5e7eb; color:#6b7280;">⏳ Firebase...</span>
         <!-- Low Stock Bell -->
+        <button class="bell-btn" onclick="showPage('suspended')" title="الفواتير المعلقة" style="position:relative;">
+          🧾<span class="bell-badge hidden" id="suspendedBadge" style="background:#1a5faf;">0</span>
+        </button>
         <button class="bell-btn" onclick="toggleLowStockPanel()" title="تنبيهات المخزون" id="lowStockBellBtn">
           🔔<span class="bell-badge hidden" id="lowStockBadge">0</span>
         </button>
@@ -2278,7 +2281,7 @@ function updateClock() {
 function renderProducts() {
   // Block POS sales from warehouse
   if (currentBranch === 'wh') {
-    const grid = document.getElementById('productGrid');
+    const grid = document.getElementById('productsGrid');
     if (grid) {
       grid.innerHTML = '';
       var msg = document.createElement('div');
@@ -3710,21 +3713,13 @@ function saveBranchUsers() {
 
 function changePass(role) {
   const users = getUsers();
-  if (role === 'admin') {
-    const curr = document.getElementById('sCurrPass').value;
-    const np   = document.getElementById('sNewPass').value;
-    if (curr !== users.admin) { showMsg('sAdminMsg','كلمة المرور الحالية غلط','danger'); return; }
-    if (np.length < 4)        { showMsg('sAdminMsg','يجب أن تكون 4 أحرف على الأقل','danger'); return; }
-    users.admin = np; setUsers(users);
-    showMsg('sAdminMsg','تم تغيير كلمة مرور المدير');
-    document.getElementById('sCurrPass').value = ''; document.getElementById('sNewPass').value = '';
-  } else {
-    const np = document.getElementById('sCashierPass').value;
-    if (np.length < 4) { showMsg('sCashierMsg','يجب أن تكون 4 أحرف على الأقل','danger'); return; }
-    users.cashier = np; setUsers(users);
-    showMsg('sCashierMsg','تم تغيير كلمة مرور الكاشير');
-    document.getElementById('sCashierPass').value = '';
-  }
+  const curr = document.getElementById('sCurrPass').value;
+  const np   = document.getElementById('sNewPass').value;
+  if (curr !== users.admin) { showMsg('sAdminMsg','كلمة المرور الحالية غلط','danger'); return; }
+  if (np.length < 4)        { showMsg('sAdminMsg','يجب أن تكون 4 أحرف على الأقل','danger'); return; }
+  users.admin = np; setUsers(users);
+  showMsg('sAdminMsg','تم تغيير كلمة مرور المدير');
+  document.getElementById('sCurrPass').value = ''; document.getElementById('sNewPass').value = '';
 }
 
 function saveSettings() {
@@ -5791,255 +5786,8 @@ function buildReturnsReport() {
 // ══════════════════════════════════════════════
 let _abcData = []; // full classified list for filter
 
-function buildABCReport() {
-  // Populate branch filter
-  const brSel = document.getElementById('rptAbcBranch');
-  if (brSel && brSel.options.length <= 1) {
-    BRANCH_IDS.forEach(b => {
-      if (!brSel.querySelector(`option[value="${b}"]`)) {
-        const o = document.createElement('option'); o.value = b; o.textContent = getBranchName(b);
-        brSel.appendChild(o);
-      }
-    });
-  }
-  const period  = document.getElementById('rptAbcPeriod')?.value || 'month';
-  const brFilter = document.getElementById('rptAbcBranch')?.value || 'all';
 
-  // Date range
-  const now = new Date();
-  let from;
-  if (period === 'month')   from = new Date(now.getFullYear(), now.getMonth(), 1);
-  else if (period === 'quarter') from = new Date(now.getFullYear(), now.getMonth()-2, 1);
-  else if (period === 'year')    from = new Date(now.getFullYear(), 0, 1);
-  else from = new Date(0);
 
-  const sales = getSales().filter(s => {
-    if (s.isReturn) return false;
-    if (new Date(s.date) < from) return false;
-    if (brFilter !== 'all' && s.branchId !== brFilter) return false;
-    return true;
-  });
-
-  // Aggregate by product code
-  const map = {};
-  sales.forEach(s => {
-    s.items.forEach(i => {
-      if (!map[i.code]) map[i.code] = { code: i.code, name: i.name, qty: 0, revenue: 0 };
-      map[i.code].qty     += i.qty;
-      map[i.code].revenue += i.price * i.qty;
-    });
-  });
-
-  // Sorted by revenue desc
-  const sorted = Object.values(map).sort((a,b) => b.revenue - a.revenue);
-  const totalRevenue = sorted.reduce((s,x) => s+x.revenue, 0);
-
-  // Classify A/B/C
-  let cumulative = 0;
-  sorted.forEach(item => {
-    cumulative += item.revenue;
-    const pct = totalRevenue > 0 ? cumulative / totalRevenue : 0;
-    item.revPct = totalRevenue > 0 ? item.revenue / totalRevenue : 0;
-    item.cls = pct <= 0.70 ? 'A' : pct <= 0.90 ? 'B' : 'C';
-    // Current stock
-    const inv = brFilter === 'all'
-      ? Object.values(_invCacheByBranch).flat()
-      : getInv(brFilter);
-    const invItem = inv.find(x => x.code === item.code);
-    item.stock = invItem?.qty || 0;
-  });
-
-  // Dead stock: in inventory but 0 sales in period
-  const inv = brFilter === 'all' ? Object.values(_invCacheByBranch).flat() : getInv(brFilter);
-  const soldCodes = new Set(sorted.map(x => x.code));
-  const dead = inv.filter(i => i.qty > 0 && !soldCodes.has(i.code))
-    .map(i => ({ code: i.code, name: i.name, qty: 0, revenue: 0, revPct: 0, cls: 'D', stock: i.qty }));
-
-  _abcData = [...sorted, ...dead];
-
-  // Stats
-  const aCount = sorted.filter(x=>x.cls==='A').length;
-  const bCount = sorted.filter(x=>x.cls==='B').length;
-  const cCount = sorted.filter(x=>x.cls==='C').length;
-  const el1 = document.getElementById('abc-a-count'); if (el1) el1.textContent = aCount;
-  const el2 = document.getElementById('abc-b-count'); if (el2) el2.textContent = bCount;
-  const el3 = document.getElementById('abc-c-count'); if (el3) el3.textContent = cCount;
-  const el4 = document.getElementById('abc-dead-count'); if (el4) el4.textContent = dead.length;
-
-  // Donut chart
-  const ctx = document.getElementById('chartABC');
-  if (ctx) {
-    if (ctx._chart) ctx._chart.destroy();
-    ctx._chart = new Chart(ctx.getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: ['A (70%)', 'B (20%)', 'C (10%)', '💀 Dead'],
-        datasets: [{ data: [aCount, bCount, cCount, dead.length], backgroundColor: ['#22c55e','#f59e0b','#ef4444','#94a3b8'] }]
-      },
-      options: { plugins: { legend: { position: 'bottom' } } }
-    });
-  }
-
-  // Fast movers table
-  const fastBody = document.getElementById('abc-fast-body');
-  if (fastBody) {
-    fastBody.innerHTML = sorted.slice(0,10).map(x => `<tr>
-      <td style="font-size:13px;">${x.name}</td>
-      <td style="text-align:center;">${x.qty}</td>
-      <td style="font-weight:600; color:var(--success);">${fmt(x.revenue)} ج</td>
-    </tr>`).join('');
-  }
-
-  // Full table
-  filterABCTable('all');
-}
-
-function filterABCTable(cls) {
-  const list = cls === 'all' ? _abcData : _abcData.filter(x => x.cls === cls);
-  const clsColor = { A:'#22c55e', B:'#f59e0b', C:'#ef4444', D:'#94a3b8' };
-  const clsLabel = { A:'A', B:'B', C:'C', D:'💀 Dead' };
-  const tbody = document.getElementById('abc-full-body');
-  if (!tbody) return;
-  tbody.innerHTML = list.map(x => `<tr>
-    <td style="font-size:13px;">${x.name}<br><span style="font-size:10px;color:var(--text-muted);">${x.code}</span></td>
-    <td style="text-align:center;">${x.qty}</td>
-    <td>${fmt(x.revenue)} ج</td>
-    <td style="font-size:12px;">${(x.revPct*100).toFixed(1)}%</td>
-    <td style="text-align:center;">${x.stock}</td>
-    <td><span style="background:${clsColor[x.cls]||'#94a3b8'}22; color:${clsColor[x.cls]||'#94a3b8'}; border:1px solid ${clsColor[x.cls]||'#94a3b8'}; padding:2px 10px; border-radius:10px; font-size:12px; font-weight:700;">${clsLabel[x.cls]}</span></td>
-  </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted" style="padding:24px;">لا توجد بيانات</td></tr>';
-}
-
-// ══════════════════════════════════════════════
-// COMPARATIVE ANALYTICS
-// ══════════════════════════════════════════════
-function buildCompareReport() {
-  // Populate branch filter
-  const cmpBr = document.getElementById('cmpBranch');
-  if (cmpBr && cmpBr.options.length <= 1) {
-    const branches = getBranches();
-    BRANCH_IDS.forEach(b => {
-      if (!cmpBr.querySelector(`option[value="${b}"]`)) {
-        const o = document.createElement('option'); o.value = b; o.textContent = branches[b]||BRANCH_DEFAULTS[b];
-        cmpBr.appendChild(o);
-      }
-    });
-  }
-  const bf = cmpBr?.value || 'all';
-  const allSales = getSales().filter(s => !s.isReturn);
-  const sales = bf === 'all' ? allSales : allSales.filter(s => s.branchId === bf);
-  const inv   = bf === 'all' ? Object.values(_invCacheByBranch).flat() : getInv(bf);
-
-  const now = new Date();
-  const thisMonth = now.toISOString().slice(0,7);
-  const prevMonthDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
-  const prevMonth = prevMonthDate.toISOString().slice(0,7);
-
-  const thisSales = sales.filter(s => s.date.startsWith(thisMonth));
-  const prevSales = sales.filter(s => s.date.startsWith(prevMonth));
-  const thisReturns = getSales().filter(s => s.isReturn && s.date.startsWith(thisMonth));
-  const prevReturns = getSales().filter(s => s.isReturn && s.date.startsWith(prevMonth));
-
-  const thisRev    = thisSales.reduce((s,x)=>s+x.total,0);
-  const prevRev    = prevSales.reduce((s,x)=>s+x.total,0);
-  const thisProfit = calcProfit(thisSales, inv);
-  const prevProfit = calcProfit(prevSales, inv);
-  const thisOrders = thisSales.length;
-  const prevOrders = prevSales.length;
-  const thisATV    = thisOrders>0 ? thisRev/thisOrders : 0;
-  const prevATV    = prevOrders>0 ? prevRev/prevOrders : 0;
-  const thisMargin = thisRev>0 ? (thisProfit/thisRev*100) : 0;
-  const prevMargin = prevRev>0 ? (prevProfit/prevRev*100) : 0;
-  const thisItems  = thisSales.reduce((s,x)=>s+x.items.reduce((a,i)=>a+i.qty,0),0);
-  const prevItems  = prevSales.reduce((s,x)=>s+x.items.reduce((a,i)=>a+i.qty,0),0);
-  const thisUPT    = thisOrders>0 ? thisItems/thisOrders : 0;
-  const prevUPT    = prevOrders>0 ? prevItems/prevOrders : 0;
-  const thisRetAmt = thisReturns.reduce((s,x)=>s+x.total,0);
-  const prevRetAmt = prevReturns.reduce((s,x)=>s+x.total,0);
-  const thisRetRate = thisRev>0 ? (thisRetAmt/thisRev*100) : 0;
-  const prevRetRate = prevRev>0 ? (prevRetAmt/prevRev*100) : 0;
-
-  // Update header
-  const hdr = document.getElementById('cmp-this-header');
-  if (hdr) {
-    const mn = now.toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
-    const pm = prevMonthDate.toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
-    hdr.textContent = mn;
-    const prevHdr = hdr.nextElementSibling;
-    if (prevHdr) prevHdr.textContent = pm;
-  }
-
-  // Build comparison rows
-  const rows = [
-    { label:'💰 الإيرادات', curr: thisRev,    prev: prevRev,    fmt_: v=>fmt(v)+' ج', higher:'good' },
-    { label:'💹 الأرباح',   curr: thisProfit, prev: prevProfit, fmt_: v=>fmt(v)+' ج', higher:'good' },
-    { label:'🛒 عدد الفواتير', curr: thisOrders, prev: prevOrders, fmt_: v=>v+' فاتورة', higher:'good' },
-    { label:'🧾 متوسط الفاتورة (ATV)', curr: thisATV, prev: prevATV, fmt_: v=>fmt(v)+' ج', higher:'good' },
-    { label:'📦 الأصناف المباعة', curr: thisItems, prev: prevItems, fmt_: v=>v+' قطعة', higher:'good' },
-    { label:'🛍️ UPT (قطعة/فاتورة)', curr: thisUPT, prev: prevUPT, fmt_: v=>v.toFixed(2), higher:'good' },
-    { label:'📊 هامش الربح %', curr: thisMargin, prev: prevMargin, fmt_: v=>v.toFixed(1)+'%', higher:'good' },
-    { label:'🔄 نسبة المرتجعات %', curr: thisRetRate, prev: prevRetRate, fmt_: v=>v.toFixed(1)+'%', higher:'bad' },
-  ];
-
-  const body = document.getElementById('cmpTableBody');
-  if (body) {
-    body.innerHTML = rows.map(r => {
-      const diff = r.prev===0 ? null : (r.curr-r.prev)/Math.abs(r.prev)*100;
-      const up = diff !== null ? diff >= 0 : null;
-      const isGood = up !== null ? (r.higher==='good' ? up : !up) : null;
-      const arrow = up===null ? '' : up ? '▲' : '▼';
-      const color = isGood===null ? '#94a3b8' : isGood ? '#16a34a' : '#dc2626';
-      const diffTxt = diff===null ? '—' : `${arrow} ${Math.abs(diff).toFixed(1)}%`;
-      return `<div style="display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:1px solid var(--border); font-size:13px;">
-        <div style="padding:10px 14px; font-weight:600; border-left:1px solid var(--border);">${r.label}</div>
-        <div style="padding:10px 14px; border-left:1px solid var(--border);">
-          <span style="font-weight:700;">${r.fmt_(r.curr)}</span>
-          <span style="display:inline-block; margin-right:8px; font-size:11px; font-weight:700; color:${color};">${diffTxt}</span>
-        </div>
-        <div style="padding:10px 14px; color:var(--text-muted);">${r.fmt_(r.prev)}</div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── 6-month trend ──
-  const trendMonths = Array.from({length:6}, (_,i) => {
-    const d = new Date(now.getFullYear(), now.getMonth()-5+i, 1);
-    return { key: d.toISOString().slice(0,7), label: d.toLocaleDateString('ar-EG',{month:'short',year:'2-digit'}) };
-  });
-  const trendData = trendMonths.map(m => sales.filter(s=>s.date.startsWith(m.key)).reduce((s,x)=>s+x.total,0));
-  if (chartCmpTrend) chartCmpTrend.destroy();
-  chartCmpTrend = new Chart(document.getElementById('chartCmpTrend'), {
-    type:'line',
-    data:{
-      labels: trendMonths.map(m=>m.label),
-      datasets:[{ data:trendData, borderColor:'#1a5faf', backgroundColor:'rgba(26,95,175,.08)', tension:.4, fill:true, pointBackgroundColor:'#1a5faf', pointRadius:5, label:'الإيرادات' }]
-    },
-    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{callback:v=>fmt(v)}}}, responsive:true }
-  });
-
-  // ── Branch comparison ──
-  const branches = getBranches();
-  const branchLabels = BRANCH_IDS.map(b => branches[b]||BRANCH_DEFAULTS[b]);
-  const branchRevs   = BRANCH_IDS.map(b => allSales.filter(s=>s.date.startsWith(thisMonth)&&s.branchId===b).reduce((s,x)=>s+x.total,0));
-  const prevBranchRevs = BRANCH_IDS.map(b => allSales.filter(s=>s.date.startsWith(prevMonth)&&s.branchId===b).reduce((s,x)=>s+x.total,0));
-  if (chartCmpBranches) chartCmpBranches.destroy();
-  chartCmpBranches = new Chart(document.getElementById('chartCmpBranches'), {
-    type:'bar',
-    data:{
-      labels: branchLabels,
-      datasets:[
-        { label:'الشهر الحالي', data:branchRevs,     backgroundColor:'rgba(200,25,60,.8)', borderRadius:4 },
-        { label:'الشهر السابق', data:prevBranchRevs, backgroundColor:'rgba(200,25,60,.25)', borderRadius:4 }
-      ]
-    },
-    options:{
-      indexAxis:'y',
-      plugins:{legend:{position:'top',labels:{font:{size:11}}}},
-      scales:{x:{beginAtZero:true,ticks:{callback:v=>fmt(v)}}},
-      responsive:true
-    }
-  });
-}
 
 // ══════════════════════════════════════════════
 // EXPENSE TRACKING
@@ -7072,162 +6820,11 @@ function showVLTab(tab) {
     if (btn)  { btn.style.background = t===tab?'white':''; btn.style.fontWeight = t===tab?'700':'400'; btn.style.boxShadow = t===tab?'0 1px 4px rgba(0,0,0,.1)':''; }
     if (pane) pane.classList.toggle('hidden', t!==tab);
   });
-  if (tab==='supplier')  renderSupplierAnalysis();
   if (tab==='catreport') renderCategoryReport();
-  if (tab==='customer')  renderCustomerProductMatrix();
-  if (tab==='turnover')  renderInventoryTurnover();
 }
 
-function renderSupplierAnalysis() {
-  var pane = document.getElementById('vlPane_supplier');
-  if (!pane) return;
-  var suppliers = (typeof getSuppliers==='function') ? getSuppliers() : [];
-  var products  = (typeof getInventory==='function') ? getInventory() : DB.g('inventory',[]);
-  var allSales  = getSales().filter(function(s){return !s.isReturn;});
 
-  var supMap = {};
-  products.forEach(function(p) {
-    var supId   = p.supplierId || p.supplier || '';
-    var supObj  = suppliers.find(function(s){return s.id===supId;});
-    var supName = supObj ? supObj.name : (supId || 'غير محدد');
-    if (!supMap[supName]) supMap[supName] = { name:supName, products:[], revenue:0, cost:0, qty:0 };
-    var pRev=0, pQty=0, pCost=0;
-    allSales.forEach(function(sale){
-      (sale.items||[]).forEach(function(i){
-        if(i.code===p.code){ pRev+=i.price*i.qty; pQty+=i.qty; pCost+=(i.cost||0)*i.qty; }
-      });
-    });
-    supMap[supName].revenue+=pRev; supMap[supName].cost+=pCost; supMap[supName].qty+=pQty;
-    supMap[supName].products.push({name:p.name,code:p.code,revenue:pRev,qty:pQty,margin:pRev>0?Math.round((pRev-pCost)/pRev*100):0});
-  });
 
-  var rows = Object.values(supMap).sort(function(a,b){return b.revenue-a.revenue;});
-  var maxRev = Math.max.apply(null, rows.map(function(r){return r.revenue;}));
-  maxRev = maxRev || 1;
-
-  if (!rows.length) { pane.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:30px;">لا يوجد موردون أو منتجات مرتبطة — تأكد من تحديد المورد في المنتج</p>'; return; }
-
-  var html2 = '<div style="font-size:14px;font-weight:700;margin-bottom:12px;">🔗 تحليل الموردين × الإيراد</div><div style="display:flex;flex-direction:column;gap:12px;">';
-  rows.forEach(function(sup,i) {
-    var margin = sup.revenue>0?Math.round((sup.revenue-sup.cost)/sup.revenue*100):0;
-    var barW   = Math.round(sup.revenue/maxRev*100);
-    var top3   = sup.products.filter(function(p){return p.revenue>0;}).sort(function(a,b){return b.revenue-a.revenue;}).slice(0,3);
-    var mg_bg  = margin>=30?'#dcfce7':margin>=15?'#fef9c3':'#fee2e2';
-    var mg_tc  = margin>=30?'#15803d':margin>=15?'#854d0e':'#b91c1c';
-    html2 += '<div style="background:white;border-radius:10px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);">';
-    html2 += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">';
-    html2 += '<div style="font-weight:700;font-size:14px;">'+(i+1)+'. '+sup.name+'</div>';
-    html2 += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
-    html2 += '<span style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:12px;">إيراد: '+fmt(sup.revenue)+' ج</span>';
-    html2 += '<span style="background:'+mg_bg+';color:'+mg_tc+';padding:2px 8px;border-radius:12px;font-size:12px;">هامش: '+margin+'%</span>';
-    html2 += '<span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:12px;font-size:12px;">كمية: '+sup.qty+'</span></div></div>';
-    html2 += '<div style="background:var(--bg-secondary);border-radius:4px;height:6px;margin-bottom:8px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+barW+'%;"></div></div>';
-    if (top3.length) html2 += '<div style="font-size:12px;color:var(--text-muted);">أعلى منتجات: '+top3.map(function(p){return '<strong>'+p.name+'</strong> ('+fmt(p.revenue)+' ج)';}).join(' • ')+'</div>';
-    html2 += '</div>';
-  });
-  html2 += '</div>';
-  pane.innerHTML = html2;
-}
-
-function renderCustomerProductMatrix() {
-  var pane = document.getElementById('vlPane_customer');
-  if (!pane) return;
-  var customers = getCustomers();
-  var allSales  = getSales().filter(function(s){return !s.isReturn;});
-  var tiers = [
-    {name:'💎 بلاتيني', min:20000, color:'#4c1d95', bg:'#ede9fe'},
-    {name:'🥇 ذهبي',    min:5000,  color:'#78350f', bg:'#fef3c7'},
-    {name:'🥈 فضي',     min:1000,  color:'#1e3a5f', bg:'#dbeafe'},
-    {name:'🥉 برونزي',  min:0,     color:'#4b3320', bg:'#fde8d0'}
-  ];
-  var tierMap = {};
-  tiers.forEach(function(t){ tierMap[t.name]={tier:t,customers:[],revenue:0,prodMap:{}}; });
-
-  customers.forEach(function(c) {
-    var spent = c.totalSpent||0;
-    var tier  = tiers.find(function(t){return spent>=t.min;}) || tiers[3];
-    var tm    = tierMap[tier.name];
-    tm.customers.push(c);
-    allSales.filter(function(s){return s.customerId===c.id||s.customerPhone===c.phone;}).forEach(function(s){
-      tm.revenue += s.total;
-      (s.items||[]).forEach(function(i){ tm.prodMap[i.name]=(tm.prodMap[i.name]||0)+i.qty; });
-    });
-  });
-
-  var html2='<div style="font-size:14px;font-weight:700;margin-bottom:12px;">🔗 تحليل فئات العملاء × المنتجات</div>';
-  html2+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">';
-  Object.values(tierMap).filter(function(tm){return tm.customers.length>0;}).forEach(function(tm){
-    var top5 = Object.entries(tm.prodMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-    var avg  = tm.customers.length>0?tm.revenue/tm.customers.length:0;
-    html2+='<div style="background:white;border-radius:10px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);">';
-    html2+='<div style="font-size:14px;font-weight:800;color:'+tm.tier.color+';background:'+tm.tier.bg+';padding:6px 12px;border-radius:8px;margin-bottom:10px;">'+tm.tier.name+'</div>';
-    html2+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;font-size:12px;">';
-    html2+='<div style="background:var(--bg-secondary);border-radius:6px;padding:6px;text-align:center;"><div style="font-weight:700;">'+tm.customers.length+'</div><div style="color:var(--text-muted);">عملاء</div></div>';
-    html2+='<div style="background:var(--bg-secondary);border-radius:6px;padding:6px;text-align:center;"><div style="font-weight:700;">'+fmt(tm.revenue)+' ج</div><div style="color:var(--text-muted);">إجمالي</div></div>';
-    html2+='<div style="background:var(--bg-secondary);border-radius:6px;padding:6px;text-align:center;"><div style="font-weight:700;">'+fmt(avg)+' ج</div><div style="color:var(--text-muted);">متوسط الإنفاق</div></div>';
-    html2+='</div>';
-    if (top5.length) {
-      html2+='<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--text-muted);">الأكثر شراءً:</div>';
-      top5.forEach(function(e,i){ html2+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);font-size:12px;"><span>'+(i+1)+'. '+e[0]+'</span><strong>'+e[1]+' قطعة</strong></div>'; });
-    } else { html2+='<div style="font-size:12px;color:var(--text-muted);">لا توجد مشتريات مسجلة</div>'; }
-    html2+='</div>';
-  });
-  html2+='</div>';
-  pane.innerHTML=html2;
-}
-
-function renderInventoryTurnover() {
-  var pane = document.getElementById('vlPane_turnover');
-  if (!pane) return;
-  var products = (typeof getInventory==='function') ? getInventory() : DB.g('inventory',[]);
-  var allSales = getSales().filter(function(s){return !s.isReturn;});
-  var now = new Date();
-  var d90 = new Date(now.getFullYear(), now.getMonth()-3, now.getDate()).toISOString().slice(0,10);
-
-  var items = products.map(function(p) {
-    var soldQty=0, sold90=0, revenue=0;
-    allSales.forEach(function(sale){
-      (sale.items||[]).forEach(function(i){
-        if(i.code===p.code){ soldQty+=i.qty; revenue+=i.price*i.qty; if(sale.date&&sale.date.slice(0,10)>=d90) sold90+=i.qty; }
-      });
-    });
-    var stock    = p.quantity||0;
-    var annRate  = sold90>0 ? Math.round(sold90/90*365) : 0;
-    var daysSt   = annRate>0 ? Math.round(stock/(annRate/365)) : (stock>0?9999:0);
-    var turnover = (soldQty+stock)>0 ? Math.round(soldQty/(soldQty+stock)*100) : 0;
-    return {name:p.name, code:p.code, stock:stock, soldQty:soldQty, sold90:sold90, revenue:revenue, daysStock:daysSt, turnover:turnover};
-  }).filter(function(i){return i.soldQty>0||i.stock>0;}).sort(function(a,b){return b.revenue-a.revenue;});
-
-  var fast = items.filter(function(i){return i.daysStock<=30&&i.daysStock>0;}).length;
-  var slow = items.filter(function(i){return i.daysStock>90||i.daysStock===9999;}).length;
-  var dead = items.filter(function(i){return i.soldQty===0&&i.stock>0;}).length;
-
-  var html2='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">';
-  [{l:'⚡ سريعة (≤30 يوم)',v:fast,bg:'#dcfce7',tc:'#15803d'},{l:'🐌 بطيئة (>90 يوم)',v:slow,bg:'#fef9c3',tc:'#854d0e'},{l:'💀 راكدة (لا مبيعات)',v:dead,bg:'#fee2e2',tc:'#b91c1c'}].forEach(function(k){
-    html2+='<div style="background:'+k.bg+';border-radius:8px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:'+k.tc+';">'+k.v+' منتج</div><div style="font-size:11px;color:var(--text-muted);">'+k.l+'</div></div>';
-  });
-  html2+='</div><div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px;">';
-  html2+='<thead><tr style="background:var(--sidebar);color:white;">';
-  ['المنتج','المخزون','مباع (كلي)','مباع (90 يوم)','الإيراد','دوران%','أيام المخزون','الحالة'].forEach(function(h){html2+='<th style="padding:8px;text-align:center;">'+h+'</th>';});
-  html2+='</tr></thead><tbody>';
-  items.slice(0,50).forEach(function(i){
-    var st = i.soldQty===0&&i.stock>0 ? {l:'💀 راكد',bg:'#fee2e2',tc:'#b91c1c'} :
-             i.daysStock<=30&&i.daysStock>0 ? {l:'⚡ سريع',bg:'#dcfce7',tc:'#15803d'} :
-             i.daysStock<=90 ? {l:'✅ طبيعي',bg:'#eff6ff',tc:'#1d4ed8'} : {l:'🐌 بطيء',bg:'#fef9c3',tc:'#854d0e'};
-    html2+='<tr style="border-bottom:1px solid var(--border);">';
-    html2+='<td style="padding:8px;font-weight:600;">'+i.name+'</td>';
-    html2+='<td style="padding:8px;text-align:center;">'+i.stock+'</td>';
-    html2+='<td style="padding:8px;text-align:center;">'+i.soldQty+'</td>';
-    html2+='<td style="padding:8px;text-align:center;">'+i.sold90+'</td>';
-    html2+='<td style="padding:8px;text-align:center;">'+fmt(i.revenue)+' ج</td>';
-    html2+='<td style="padding:8px;text-align:center;"><div style="background:var(--bg-secondary);border-radius:4px;height:6px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+Math.min(i.turnover,100)+'%;"></div></div><div style="font-size:11px;text-align:center;">'+i.turnover+'%</div></td>';
-    html2+='<td style="padding:8px;text-align:center;">'+(i.daysStock===9999?'∞':i.daysStock===0?'-':i.daysStock+' يوم')+'</td>';
-    html2+='<td style="padding:8px;text-align:center;"><span style="background:'+st.bg+';color:'+st.tc+';padding:2px 8px;border-radius:12px;font-size:11px;">'+st.l+'</span></td>';
-    html2+='</tr>';
-  });
-  html2+='</tbody></table></div>';
-  pane.innerHTML=html2;
-}
 
 // ── Category / Family Sales Report ────────────────────────────────
 function renderCategoryReport(fromDate, toDate) {
@@ -8667,5 +8264,137 @@ setInterval(updateHomeClock, 1000);
   <button onclick="openApprovedCarts()" style="margin-top:10px;background:white;color:#065f46;border:none;border-radius:6px;padding:5px 14px;cursor:pointer;font-weight:700;font-size:12px;">📋 عرض الفاتورة</button>
   <button onclick="document.getElementById('approvalToast').style.display='none'" style="position:absolute;top:8px;right:10px;background:none;border:none;color:white;cursor:pointer;font-size:16px;">✕</button>
 </div>
+
+  <!-- ══ RETURN MODAL (from receipt) ══ -->
+  <div id="returnModal" class="modal-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="modal-box" style="max-width:520px;width:92%;">
+      <div class="modal-header">
+        <h3 style="margin:0;font-size:17px;">🔄 إرجاع منتجات من الفاتورة</h3>
+        <button class="modal-close" onclick="document.getElementById('returnModal').classList.add('hidden')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height:60vh;overflow-y:auto;">
+        <div id="returnItemsList"></div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>سبب الإرجاع (اختياري)</label>
+          <input class="form-control" id="returnReason" placeholder="سبب الإرجاع..." />
+        </div>
+        <div id="returnSummary" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;">
+            <span>💰 إجمالي المرتجع:</span>
+            <span id="returnTotalDisplay" style="color:var(--danger);">0 ج</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('returnModal').classList.add('hidden')">إلغاء</button>
+        <button class="btn btn-danger" onclick="processReturn()">✅ تأكيد الإرجاع</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ EXPENSE MODAL ══ -->
+  <div id="expenseModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('expenseModal')">
+    <div class="modal-box" style="max-width:480px;width:92%;">
+      <div class="modal-header">
+        <h3 id="expModalTitle" style="margin:0;font-size:17px;">➕ إضافة مصروف</h3>
+        <button class="modal-close" onclick="closeModal('expenseModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="expEditId" />
+        <div class="form-group">
+          <label>نوع المصروف</label>
+          <select class="form-control" id="expType" onchange="toggleExpBranch()">
+            <option value="branch">🏬 مصروف فرع</option>
+            <option value="company">🏢 مصروف إداري</option>
+          </select>
+        </div>
+        <div class="form-group" id="expBranchGroup">
+          <label>الفرع</label>
+          <select class="form-control" id="expBranchId"></select>
+        </div>
+        <div class="form-group">
+          <label>الفئة</label>
+          <select class="form-control" id="expCategory">
+            <option value="rent">🏠 إيجار</option>
+            <option value="salary">👤 رواتب</option>
+            <option value="utilities">💡 فواتير (كهرباء / ماية / غاز)</option>
+            <option value="maintenance">🔧 صيانة</option>
+            <option value="marketing">📣 تسويق وإعلان</option>
+            <option value="supplies">📦 مستلزمات</option>
+            <option value="transport">🚚 نقل وشحن</option>
+            <option value="other">📋 أخرى</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>المبلغ (ج)</label>
+          <input class="form-control" type="number" id="expAmount" placeholder="0.00" min="0" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>التاريخ</label>
+          <input class="form-control" type="date" id="expDate" />
+        </div>
+        <div class="form-group">
+          <label>ملاحظات (اختياري)</label>
+          <textarea class="form-control" id="expNote" rows="2" placeholder="ملاحظات..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="closeModal('expenseModal')">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveExpense()">💾 حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BARCODE / PRICE TAG MODAL ══ -->
+  <div id="barcodeModal" class="modal-overlay hidden" onclick="if(event.target===this)document.getElementById('barcodeModal').classList.add('hidden')">
+    <div class="modal-box" style="max-width:800px;width:96%;max-height:90vh;display:flex;flex-direction:column;">
+      <div class="modal-header">
+        <h3 style="margin:0;font-size:17px;">🏷️ طباعة باركود / تاج السعر</h3>
+        <button class="modal-close" onclick="document.getElementById('barcodeModal').classList.add('hidden')">✕</button>
+      </div>
+      <div style="display:flex;gap:12px;flex:1;overflow:hidden;min-height:0;padding:16px;">
+        <!-- Left: product list -->
+        <div style="width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;">
+          <input class="form-control" id="bcSearch" placeholder="🔍 بحث..." oninput="renderBarcodeList()" style="font-size:13px;" />
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline btn-sm" onclick="bcSelectAll(true)" style="flex:1;font-size:11px;">تحديد الكل</button>
+            <button class="btn btn-outline btn-sm" onclick="bcSelectAll(false)" style="flex:1;font-size:11px;">إلغاء الكل</button>
+          </div>
+          <div id="bcProductList" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:4px;"></div>
+        </div>
+        <!-- Right: settings + preview -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <div class="form-group" style="margin:0;flex:1;min-width:120px;">
+              <label style="font-size:12px;">حجم التاج</label>
+              <select class="form-control" id="bcTagSize" onchange="renderBarcodePreview()" style="font-size:13px;">
+                <option value="small">صغير</option>
+                <option value="medium" selected>متوسط</option>
+                <option value="large">كبير</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;flex:1;min-width:120px;">
+              <label style="font-size:12px;">عرض السعر</label>
+              <select class="form-control" id="bcShowPrice" onchange="renderBarcodePreview()" style="font-size:13px;">
+                <option value="after">السعر النهائي</option>
+                <option value="before">السعر قبل</option>
+                <option value="both">قبل وبعد</option>
+                <option value="none">بدون سعر</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;width:80px;">
+              <label style="font-size:12px;">عدد النسخ</label>
+              <input class="form-control" type="number" id="bcCopies" value="1" min="1" max="20" oninput="renderBarcodePreview()" style="font-size:13px;" />
+            </div>
+          </div>
+          <div id="bcPreview" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;background:#f8fafc;"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;">
+        <button class="btn btn-outline" onclick="document.getElementById('barcodeModal').classList.add('hidden')">إلغاء</button>
+        <button class="btn btn-primary" onclick="printBarcodes()">🖨️ طباعة</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
