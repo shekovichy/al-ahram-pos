@@ -64,10 +64,10 @@ select.form-control { cursor:pointer; }
 .btn-sm { padding:5px 12px; font-size:12px; }
 
 /* ---- LAYOUT ---- */
-.app-layout { display:flex; min-height:100vh; }
+.app-layout { display:flex; flex-direction:column; min-height:100vh; }
 
 /* ---- SIDEBAR ---- */
-.sidebar { width:230px; background:var(--sidebar); color:white; display:flex; flex-direction:column; flex-shrink:0; }
+.sidebar { display:none; }
 .sidebar-header { padding:20px; border-bottom:1px solid rgba(255,255,255,.1); }
 .sidebar-header h2 { font-size:17px; font-weight:700; }
 .sidebar-header p { font-size:12px; opacity:.6; margin-top:4px; }
@@ -649,62 +649,12 @@ body.pos-fullscreen #cartFab { z-index:700; }
 
 <!-- ===================== MANAGER VIEW ===================== -->
 <div id="managerView" class="hidden app-layout">
-  <div class="sidebar">
-    <div class="sidebar-header" style="padding:16px 18px;">
-      <div style="display:flex;align-items:center;gap:10px;padding:6px 2px;margin-bottom:8px;">
-        <svg width="40" height="40" viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
-          <polygon points="29,3 53,16 53,42 29,55 5,42 5,16" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
-          <circle cx="29" cy="29" r="6" fill="#1a5faf"/>
-          <circle cx="29" cy="14" r="3.5" fill="#F47920"/>
-          <circle cx="42" cy="21" r="3.5" fill="#F47920"/>
-          <circle cx="42" cy="37" r="3.5" fill="#F47920"/>
-          <circle cx="29" cy="44" r="3.5" fill="rgba(255,255,255,.55)"/>
-          <circle cx="16" cy="37" r="3.5" fill="rgba(255,255,255,.55)"/>
-          <circle cx="16" cy="21" r="3.5" fill="rgba(255,255,255,.55)"/>
-          <line x1="29" y1="23" x2="29" y2="14" stroke="#F47920" stroke-width="1.5"/>
-          <line x1="29" y1="23" x2="42" y2="21" stroke="#F47920" stroke-width="1.5"/>
-          <line x1="29" y1="23" x2="42" y2="37" stroke="#F47920" stroke-width="1.5"/>
-          <line x1="29" y1="35" x2="29" y2="44" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
-          <line x1="29" y1="35" x2="16" y2="37" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
-          <line x1="29" y1="35" x2="16" y2="21" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
-        </svg>
-        <div>
-          <div style="font-size:19px;font-weight:800;color:white;letter-spacing:2px;line-height:1.1;">VOODO</div>
-          <div style="font-size:9px;font-weight:700;color:#F47920;letter-spacing:5px;margin-top:1px;">ERP</div>
-        </div>
-      </div>
-      <p id="managerRoleLabel" style="font-size:12px; opacity:.7; text-align:center;">مدير النظام</p>
-    </div>
-    <nav class="sidebar-nav">
-      <button class="nav-item" data-page="home" onclick="showPage('home')"><span class="nav-icon">🏠</span>الرئيسية</button>
-      <button class="nav-item active" data-page="dashboard"  onclick="showPage('dashboard')"><span class="nav-icon">📊</span>الداشبورد</button>
-      <button class="nav-item"        data-page="inventory"  onclick="showPage('inventory')"><span class="nav-icon">📦</span>المخزون</button>
-      <button class="nav-item"        data-page="sales"      onclick="showPage('sales')"><span class="nav-icon">💰</span>المبيعات</button>
-      <button class="nav-item"        data-page="suspended"  onclick="showPage('suspended')" id="suspendedNavBtn">
-        <span class="nav-icon">⏸</span>معلقة
-        <span id="suspendedBadge" class="hidden" style="background:#1a5faf;color:white;border-radius:10px;font-size:9px;padding:1px 5px;margin-right:2px;"></span>
-      </button>
-      <button class="nav-item"        data-page="reports"    onclick="showPage('reports')"><span class="nav-icon">📈</span>التقارير</button>
-      <button class="nav-item"        data-page="customized" onclick="showPage('customized')"><span class="nav-icon">📊</span>Customized</button>
-      <button class="nav-item"        data-page="warehouse"  onclick="showPage('warehouse')"><span class="nav-icon">🏭</span>المخزن الرئيسي</button>
-      <button class="nav-item"        data-page="customers"  onclick="showPage('customers')"><span class="nav-icon">👥</span>العملاء</button>
-      <button class="nav-item"        data-page="promos"     onclick="showPage('promos')" id="promosNavBtn"><span class="nav-icon">🏷️</span>العروض</button>
-      <button class="nav-item"        data-page="transfers"  onclick="showPage('transfers')"><span class="nav-icon">🔄</span>التحويلات</button>
-      <button class="nav-item"        data-page="purchases"  onclick="showPage('purchases')"><span class="nav-icon">🛒</span>المشتريات</button>
-      <button class="nav-item"        data-page="hr"         onclick="showPage('hr')"><span class="nav-icon">👔</span>الموارد البشرية</button>
-      <button class="nav-item"        data-page="accounting" onclick="showPage('accounting')"><span class="nav-icon">🏦</span>المحاسبة</button>
-      <button class="nav-item"        data-page="expenses"   onclick="showPage('expenses')"><span class="nav-icon">💸</span>المصاريف</button>
-      <button class="nav-item"        data-page="audit"      onclick="showPage('audit')"><span class="nav-icon">🔍</span>سجل التغييرات</button>
-      <button class="nav-item"        data-page="settings"   onclick="showPage('settings')"><span class="nav-icon">⚙️</span>الإعدادات</button>
-    </nav>
-    <div class="sidebar-footer">
-      <button class="btn" style="background:rgba(255,255,255,.1);color:white;width:100%;font-size:13px;" onclick="logout()">🚪 تسجيل الخروج</button>
-    </div>
-  </div>
-
   <div class="main-content">
     <div class="topbar">
-      <h1 id="pageTitle">الرئيسية</h1>
+      <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="showPage('home')" style="background:rgba(26,95,175,.12);border:1px solid rgba(26,95,175,.25);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:16px;color:var(--primary);" title="الرئيسية">🏠</button>
+          <h1 id="pageTitle">الرئيسية</h1>
+        </div>
       <div class="flex items-center gap-8" style="flex-wrap:wrap;">
         <span style="font-size:12px;color:var(--text-muted);" id="todayDate"></span>
         <!-- Branch Switcher -->
