@@ -2595,6 +2595,7 @@ function showPage(page) {
   document.getElementById('page-'+page).classList.remove('hidden');
   var content = document.querySelector('.main-content');
   if (content) content.classList.toggle('home-mode', page === 'home');
+  if (page === 'home') { updateHomeClock(); updateSuspendedBadge(); }
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
   const titles = { dashboard:'الرئيسية', inventory:'إدارة المخزون', sales:'سجل المبيعات', suspended:'فواتير معلقة', reports:'التقارير', customized:'تقارير مخصصة', home:'الرئيسية', warehouse:'المخزن الرئيسي', settings:'الإعدادات', customers:'العملاء', purchases:'المشتريات', hr:'الموارد البشرية', expenses:'المصاريف', audit:'سجل التغييرات', accounting:'المحاسبة الرسمية' };
@@ -8102,6 +8103,27 @@ function rejectSuspRequest(id) {
   updateApprovalBadge();
   renderSuspApprovals();
 }
+
+function updateHomeClock() {
+  var now = new Date();
+  var hh  = String(now.getHours()).padStart(2,'0');
+  var mm  = String(now.getMinutes()).padStart(2,'0');
+  var el  = document.getElementById('homeClock');
+  if (el) el.textContent = hh + ':' + mm;
+  var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var dateStr = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  var del = document.getElementById('homeDate');
+  if (del) del.textContent = dateStr;
+  var greet = document.getElementById('homeGreeting');
+  if (greet) {
+    var h = now.getHours();
+    var g = h < 12 ? '🌅 صباح الخير' : h < 18 ? '☀️ مساء الخير' : '🌙 مساء النور';
+    greet.textContent = g;
+  }
+}
+setInterval(updateHomeClock, 1000);
+
 </script>
 
 <!-- ===================== CUSTOMER MODAL ===================== -->
