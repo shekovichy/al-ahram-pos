@@ -2256,9 +2256,7 @@ function applyMobileUI() {
   // Cart close button
   const cb = document.getElementById('cartCloseBtn');
   if (cb) cb.style.display = mobile ? 'flex' : 'none';
-  // Manager topbar logout button
-  const tl = document.getElementById('topbarLogout');
-  if (tl) tl.style.display = mobile ? 'flex' : 'none';
+  // Manager topbar logout button — always shown after login, don't touch here
   // FAB
   const fab = document.getElementById('cartFab');
   if (fab) fab.style.display = mobile ? 'flex' : 'none';
