@@ -2,6 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1a5faf">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AL-AHRAM POS">
+  <link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VOODO ERP — نظام الكاشير</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,9 +36,33 @@
   --border: #f0d8db;
   --text: #1a2b4a;
   --text-muted: #8a5560;
+  --input-bg: #ffffff;
+  --topbar-bg: #ffffff;
+  --table-head-bg: #f8fafc;
+  --modal-bg: #ffffff;
+  --shadow: rgba(0,0,0,.06);
+}
+
+/* ── DARK MODE ─────────────────────────────── */
+[data-theme="dark"] {
+  --primary: #4d8fd1;
+  --primary-dark: #3a7bbf;
+  --primary-light: #5fa0e0;
+  --sidebar: #0a1628;
+  --sidebar-hover: #162540;
+  --bg: #0f1923;
+  --card: #1a2535;
+  --border: #2a3a50;
+  --text: #e2eaf4;
+  --text-muted: #7a9bbf;
+  --input-bg: #1e2f42;
+  --topbar-bg: #151f2e;
+  --table-head-bg: #1e2f42;
+  --modal-bg: #1a2535;
+  --shadow: rgba(0,0,0,.3);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Jost', 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+body { font-family: 'Jost', 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); direction: rtl; transition: background .3s, color .3s; }
 
 /* ---- LOGIN ---- */
 .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#0d1b35 0%,#1a5faf 60%,#2472cc 100%); }
@@ -43,7 +75,7 @@ body { font-family: 'Jost', 'Segoe UI', Tahoma, Arial, sans-serif; background: v
 /* ---- FORMS ---- */
 .form-group { margin-bottom:16px; }
 .form-group label { display:block; font-size:14px; font-weight:600; margin-bottom:6px; }
-.form-control { width:100%; padding:10px 14px; border:2px solid var(--border); border-radius:8px; font-size:15px; font-family:inherit; direction:rtl; transition:border-color .2s; }
+.form-control { width:100%; padding:10px 14px; border:2px solid var(--border); border-radius:8px; font-size:15px; font-family:inherit; direction:rtl; transition:border-color .2s; background:var(--input-bg); color:var(--text); }
 .form-control:focus { outline:none; border-color:var(--primary); }
 select.form-control { cursor:pointer; }
 
@@ -81,17 +113,17 @@ select.form-control { cursor:pointer; }
 
 /* ---- MAIN ---- */
 .main-content { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
-.topbar { background:white; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,.05); }
+.topbar { background:var(--topbar-bg); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,.05); }
 .topbar h1 { font-size:20px; font-weight:700; }
 .content-area { flex:1; padding:24px; overflow-y:auto; }
 
 /* ---- CARDS ---- */
-.card { background:white; border-radius:12px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.06); border:1px solid var(--border); }
+.card { background:var(--card); border-radius:12px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.06); border:1px solid var(--border); }
 .card-title { font-size:15px; font-weight:700; margin-bottom:16px; }
 
 /* ---- STATS ---- */
 .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px; margin-bottom:24px; }
-.stat-card { background:white; border-radius:12px; padding:18px; border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,.05); }
+.stat-card { background:var(--card); border-radius:12px; padding:18px; border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,.05); }
 .stat-label { font-size:12px; color:var(--text-muted); font-weight:500; }
 .stat-value { font-size:26px; font-weight:800; margin-top:6px; color:var(--primary); }
 .stat-sub { font-size:12px; color:var(--text-muted); margin-top:3px; }
@@ -99,23 +131,23 @@ select.form-control { cursor:pointer; }
 /* ---- TABLES ---- */
 .table-wrap { overflow-x:auto; }
 table { width:100%; border-collapse:collapse; }
-th { background:#f8fafc; padding:11px 13px; text-align:right; font-size:12px; font-weight:600; color:var(--text-muted); border-bottom:2px solid var(--border); white-space:nowrap; }
+th { background:var(--table-head-bg); padding:11px 13px; text-align:right; font-size:12px; font-weight:600; color:var(--text-muted); border-bottom:2px solid var(--border); white-space:nowrap; }
 td { padding:11px 13px; border-bottom:1px solid var(--border); font-size:13px; }
 tr:hover td { background:#f8fafc; }
 
 /* ---- CASHIER LAYOUT ---- */
 .cashier-layout { display:flex; height:100vh; }
-.products-panel { flex:1; display:flex; flex-direction:column; padding:16px; overflow:hidden; background:var(--bg); }
-.cart-panel { width:340px; background:white; border-right:2px solid var(--border); display:flex; flex-direction:column; }
+.products-panel { flex:1; display:flex; flex-direction:column; padding:16px; overflow:hidden; background:var(--bg); transition:background .3s; }
+.cart-panel { width:340px; background:var(--card); border-right:2px solid var(--border); display:flex; flex-direction:column; }
 
 /* ---- SEARCH ---- */
 .search-bar { display:flex; gap:8px; margin-bottom:14px; }
-.search-input { flex:1; padding:10px 14px; border:2px solid var(--border); border-radius:8px; font-size:14px; direction:rtl; font-family:inherit; transition:border-color .2s; }
+.search-input { flex:1; padding:10px 14px; border:2px solid var(--border); border-radius:8px; font-size:14px; direction:rtl; font-family:inherit; transition:border-color .2s; background:var(--input-bg); color:var(--text); }
 .search-input:focus { outline:none; border-color:var(--primary); }
 
 /* ---- PRODUCTS GRID ---- */
 .products-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:10px; overflow-y:auto; flex:1; }
-.product-card { background:white; border:2px solid var(--border); border-radius:10px; padding:12px; cursor:pointer; transition:all .2s; text-align:center; user-select:none; }
+.product-card { background:var(--card); border:2px solid var(--border); border-radius:10px; padding:12px; cursor:pointer; transition:all .2s; text-align:center; user-select:none; }
 .product-card:hover { border-color:var(--primary); box-shadow:0 4px 14px rgba(26,95,175,.18); transform:translateY(-2px); }
 .product-card.out-of-stock { opacity:.45; cursor:not-allowed; pointer-events:none; }
 .product-code { font-size:10px; color:var(--text-muted); margin-bottom:5px; }
@@ -713,6 +745,14 @@ body.pos-fullscreen #cartFab { z-index:700; }
         <button id="approvalBellBtn" onclick="openApprovalsPanel()" title="طلبات تعديل الأسعار" style="display:none;position:relative;background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;">
           🔔<span id="approvalBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;border-radius:50%;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;">0</span>
         </button>
+        <button id="pwaInstallBtn" onclick="installPWA()"
+          title="تثبيت التطبيق"
+          style="display:none;align-items:center;gap:4px;background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;">
+          📲 تثبيت
+        </button>
+        <button id="darkModeToggle" onclick="toggleDarkMode()"
+          title="تبديل الوضع الداكن"
+          style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 8px;cursor:pointer;font-size:16px;color:var(--text);transition:all .2s;">🌙</button>
         <button class="btn btn-danger btn-sm" onclick="logout()"
           style="display:none;" id="topbarLogout">خروج</button>
       </div>
@@ -951,6 +991,8 @@ body.pos-fullscreen #cartFab { z-index:700; }
               <option value="">👤 كل البائعين</option>
             </select>
             <button class="btn btn-gray btn-sm" onclick="printReport('rpt-sales')">🖨️ طباعة</button>
+            <button class="btn btn-success btn-sm" onclick="exportReportExcel('sales')">📊 Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="exportReportPDF('rpt-sales','تقرير المبيعات')">📄 PDF</button>
           </div>
           <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
             <div class="stat-card"><div class="stat-label">إجمالي المبيعات</div><div class="stat-value" id="rs-total">0</div></div>
@@ -1013,6 +1055,8 @@ body.pos-fullscreen #cartFab { z-index:700; }
               <option value="">👤 كل البائعين</option>
             </select>
             <button class="btn btn-gray btn-sm" onclick="printReport('rpt-profit')">🖨️ طباعة</button>
+            <button class="btn btn-success btn-sm" onclick="exportReportExcel('profit')">📊 Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="exportReportPDF('rpt-profit','تقرير الأرباح')">📄 PDF</button>
           </div>
           <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
             <div class="stat-card"><div class="stat-label">💰 إجمالي الإيرادات</div><div class="stat-value" id="rp-revenue">0</div></div>
@@ -1786,13 +1830,48 @@ body.pos-fullscreen #cartFab { z-index:700; }
           <div class="card" style="grid-column:1/-1;">
             <div class="card-title">💾 النسخ الاحتياطي</div>
             <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
-              تصدير كل بيانات النظام (مخزون + مبيعات + إعدادات) كملف JSON، أو استعادتها من نسخة سابقة.
+              تصدير كل بيانات النظام (مخزون + مبيعات + إعدادات) كملف JSON، أو رفعها مباشرة على Google Drive.
             </p>
-            <div class="flex gap-8" style="flex-wrap:wrap;">
-              <button class="btn btn-primary" onclick="exportBackup()">📤 تصدير نسخة احتياطية</button>
+            <div class="flex gap-8" style="flex-wrap:wrap;align-items:center;">
+              <button class="btn btn-primary" onclick="exportBackup()">📤 تنزيل نسخة محلية</button>
               <button class="btn btn-outline" onclick="document.getElementById('backupImportInput').click()">📥 استعادة من نسخة</button>
               <input type="file" id="backupImportInput" accept=".json" class="hidden" onchange="importBackup(event)" />
+              <button id="gdriveConnectBtn" class="btn btn-success" onclick="connectGoogleDrive()" style="display:none;">
+                <img src="https://www.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" style="width:16px;height:16px;vertical-align:middle;margin-left:4px;"> ربط Google Drive
+              </button>
+              <button id="gdriveBackupBtn" class="btn btn-success" onclick="backupToGoogleDrive()" style="display:none;">
+                ☁️ رفع على Drive الآن
+              </button>
+              <span id="gdriveStatus" style="font-size:12px;color:var(--text-muted);"></span>
             </div>
+
+            <!-- Google Drive Config -->
+            <div id="gdriveSetupBox" style="margin-top:16px;padding:14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);display:none;">
+              <div style="font-weight:600;font-size:13px;margin-bottom:10px;">⚙️ إعداد Google Drive</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+                أدخل الـ Client ID من <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--primary);">Google Cloud Console</a><br>
+                (تأكد إنك فعّلت Drive API وأضفت الـ domain في Authorized Origins)
+              </div>
+              <div class="flex gap-8">
+                <input id="gdriveClientIdInput" class="form-control" style="flex:1;" placeholder="xxxxxxxx.apps.googleusercontent.com" />
+                <button class="btn btn-primary btn-sm" onclick="saveGdriveClientId()">حفظ</button>
+              </div>
+            </div>
+
+            <!-- Auto backup schedule -->
+            <div style="margin-top:14px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <span style="font-size:13px;font-weight:600;">⏰ نسخ احتياطي تلقائي يومي</span>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                  <input type="checkbox" id="autoBackupToggle" onchange="toggleAutoBackup(this.checked)" style="width:16px;height:16px;">
+                  <span style="font-size:13px;">تفعيل</span>
+                </label>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:6px;" id="autoBackupDesc">
+                يتحقق يومياً عند فتح النظام ويرفع نسخة على Drive تلقائياً.
+              </div>
+            </div>
+
             <div id="sBackupMsg" class="mt-16"></div>
             <div id="lastBackupInfo" style="margin-top:10px;font-size:12px;color:var(--text-muted);"></div>
           </div>
@@ -2232,6 +2311,203 @@ async function doLogin() {
   }
 }
 
+
+// ── EXPORT REPORTS — Excel & PDF ────────────────────────────
+function exportReportExcel(type) {
+  const wb = XLSX.utils.book_new();
+  let ws, sheetName;
+
+  if (type === 'sales') {
+    // Build data from sales breakdown table
+    const rows = [['المنتج','الكمية المباعة','الإيراد (ج.م)']];
+    document.querySelectorAll('#rs-breakdown tr').forEach(tr => {
+      const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+      if (cells.length) rows.push(cells);
+    });
+    // Add summary at top
+    const summary = [
+      ['إجمالي المبيعات', document.getElementById('rs-total')?.textContent || ''],
+      ['صافي الإيرادات',  document.getElementById('rs-net')?.textContent || ''],
+      ['عدد الفواتير',    document.getElementById('rs-count')?.textContent || ''],
+      ['متوسط الفاتورة',  document.getElementById('rs-avg')?.textContent || ''],
+      [],
+      ...rows
+    ];
+    ws = XLSX.utils.aoa_to_sheet(summary);
+    sheetName = 'تقرير المبيعات';
+  } else if (type === 'profit') {
+    const rows = [['المنتج','الكمية','الإيراد','التكلفة','الربح','هامش%']];
+    document.querySelectorAll('#rp-breakdown tr').forEach(tr => {
+      const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+      if (cells.length) rows.push(cells);
+    });
+    const summary = [
+      ['إجمالي الإيرادات', document.getElementById('rp-revenue')?.textContent || ''],
+      ['إجمالي التكلفة',   document.getElementById('rp-cost')?.textContent || ''],
+      ['صافي الربح',       document.getElementById('rp-profit')?.textContent || ''],
+      ['هامش الربح',       document.getElementById('rp-margin')?.textContent || ''],
+      ['إجمالي الخصومات', document.getElementById('rp-discounts')?.textContent || ''],
+      [],
+      ...rows
+    ];
+    ws = XLSX.utils.aoa_to_sheet(summary);
+    sheetName = 'تقرير الأرباح';
+  }
+
+  if (!ws) { showToast('⚠️ لا توجد بيانات للتصدير'); return; }
+
+  // Style column widths
+  ws['!cols'] = [{wch:30},{wch:15},{wch:15},{wch:15},{wch:15},{wch:10}];
+
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, sheetName + '_' + date + '.xlsx');
+  showToast('✅ تم تصدير ' + sheetName + ' كـ Excel');
+}
+
+function exportReportPDF(sectionId, title) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+
+  // Open print dialog with just this section
+  const printWin = window.open('', '_blank', 'width=900,height=700');
+  const styles = [...document.styleSheets].map(ss => {
+    try { return [...ss.cssRules].map(r => r.cssText).join('\n'); }
+    catch(e) { return ''; }
+  }).join('\n');
+
+  printWin.document.write(`<!DOCTYPE html><html dir="rtl"><head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <style>
+      body { font-family: 'Segoe UI', Arial, sans-serif; direction: rtl; padding: 20px; color: #1a2b4a; }
+      h1 { color: #1a5faf; font-size: 20px; margin-bottom: 16px; border-bottom: 2px solid #1a5faf; padding-bottom: 8px; }
+      .print-date { font-size: 12px; color: #666; margin-bottom: 16px; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th { background: #1a5faf; color: white; padding: 8px 10px; text-align: right; }
+      td { padding: 7px 10px; border-bottom: 1px solid #e0e0e0; }
+      tr:nth-child(even) td { background: #f5f8ff; }
+      .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+      .stat-card { background: #f0f5ff; border-radius: 8px; padding: 12px; border: 1px solid #c0d4f5; }
+      .stat-label { font-size: 11px; color: #666; }
+      .stat-value { font-size: 20px; font-weight: 800; color: #1a5faf; margin-top: 4px; }
+      .btn { display: none; }
+      @media print { button { display: none; } }
+    </style>
+  </head><body>
+    <h1>${title}</h1>
+    <div class="print-date">📅 تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG', {weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+    ${section.innerHTML}
+  </body></html>`);
+
+  printWin.document.close();
+  setTimeout(() => { printWin.print(); printWin.close(); }, 800);
+}
+
+
+// ── GOOGLE DRIVE BACKUP ─────────────────────────────────────
+const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+let _gdriveToken = null;
+
+function getGdriveClientId() { return DB.g('gdriveClientId', ''); }
+
+function saveGdriveClientId() {
+  const val = document.getElementById('gdriveClientIdInput').value.trim();
+  if (!val) { showToast('⚠️ أدخل الـ Client ID أولاً'); return; }
+  DB.s('gdriveClientId', val);
+  showToast('✅ تم حفظ الـ Client ID');
+  initGoogleDriveUI();
+}
+
+function initGoogleDriveUI() {
+  const clientId = getGdriveClientId();
+  const connectBtn = document.getElementById('gdriveConnectBtn');
+  const backupBtn  = document.getElementById('gdriveBackupBtn');
+  const setupBox   = document.getElementById('gdriveSetupBox');
+  const autoToggle = document.getElementById('autoBackupToggle');
+  if (setupBox) {
+    setupBox.style.display = clientId ? 'none' : 'block';
+    const inp = document.getElementById('gdriveClientIdInput');
+    if (inp && clientId) inp.value = clientId;
+  }
+  if (connectBtn) connectBtn.style.display = (clientId && !_gdriveToken) ? 'flex' : 'none';
+  if (backupBtn)  backupBtn.style.display  = _gdriveToken ? 'flex' : 'none';
+  if (autoToggle) autoToggle.checked = DB.g('autoBackupEnabled', false);
+  const statusEl = document.getElementById('gdriveStatus');
+  if (statusEl) statusEl.textContent = _gdriveToken ? '✅ متصل بـ Google Drive' : '';
+}
+
+function connectGoogleDrive() {
+  const clientId = getGdriveClientId();
+  if (!clientId) { showToast('⚠️ أدخل الـ Client ID أولاً'); return; }
+  const redirect = window.location.origin;
+  const url = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' + encodeURIComponent(clientId) +
+    '&redirect_uri=' + encodeURIComponent(redirect) + '&response_type=token' +
+    '&scope=' + encodeURIComponent(GDRIVE_SCOPE) + '&prompt=select_account';
+  const popup = window.open(url, 'gdrive_auth', 'width=500,height=600,left=300,top=100');
+  const timer = setInterval(() => {
+    try {
+      if (!popup || popup.closed) { clearInterval(timer); return; }
+      const hash = popup.location.hash;
+      if (hash && hash.includes('access_token')) {
+        clearInterval(timer); popup.close();
+        const params = new URLSearchParams(hash.slice(1));
+        _gdriveToken = params.get('access_token');
+        initGoogleDriveUI();
+        showToast('✅ تم الربط مع Google Drive!');
+        if (DB.g('autoBackupEnabled', false)) checkAutoBackup(true);
+      }
+    } catch(e) {}
+  }, 500);
+}
+
+async function backupToGoogleDrive(silent) {
+  if (!_gdriveToken) { if (!silent) showToast('⚠️ ارتبط بـ Google Drive أولاً'); return false; }
+  const backup = {
+    version:2, date:new Date().toISOString(), branch:currentBranch,
+    inv:DB.g('pos_inv_'+currentBranch,[]), sales:DB.g('pos_sales',[]),
+    customers:DB.g('pos_customers',[]), expenses:DB.g('pos_expenses',[]),
+    sellers:DB.g('pos_sellers',[]), branchNames:DB.g('pos_branch_names',{}),
+    purchases:DB.g('pos_purchases',[]), suppliers:DB.g('pos_suppliers',[]),
+  };
+  const fileName = 'AlAhram_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+  const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
+  try {
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify({name:fileName,mimeType:'application/json'})],{type:'application/json'}));
+    form.append('file', blob);
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method:'POST', headers:{Authorization:'Bearer '+_gdriveToken}, body:form
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      if (err.error && err.error.code===401) { _gdriveToken=null; if(!silent) showToast('⚠️ انتهت صلاحية الربط — أعد الاتصال'); initGoogleDriveUI(); return false; }
+      throw new Error((err.error && err.error.message) || 'Upload failed');
+    }
+    DB.s('lastDriveBackup', new Date().toISOString());
+    if (!silent) showToast('☁️ تم رفع النسخة على Google Drive!');
+    renderLastBackupInfo(); return true;
+  } catch(err) { if (!silent) showToast('❌ فشل الرفع: '+err.message); return false; }
+}
+
+function toggleAutoBackup(enabled) {
+  DB.s('autoBackupEnabled', enabled);
+  showToast(enabled ? '✅ تم تفعيل النسخ التلقائي' : '⏹️ تم إيقاف النسخ التلقائي');
+}
+
+async function checkAutoBackup(force) {
+  if (!DB.g('autoBackupEnabled',false) && !force) return;
+  const last = DB.g('lastDriveBackup','');
+  const today = new Date().toISOString().slice(0,10);
+  if (!force && last && last.startsWith(today)) return;
+  if (_gdriveToken) {
+    const ok = await backupToGoogleDrive(true);
+    if (ok) showToast('☁️ تم النسخ الاحتياطي التلقائي على Drive');
+  }
+}
+setTimeout(() => checkAutoBackup(false), 5000);
+
+
 function logout() {
   if (!confirm('هل تريد تسجيل الخروج؟')) return;
   currentUser = null; cart = [];
@@ -2241,6 +2517,27 @@ function logout() {
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
 }
+
+// ── DARK MODE ────────────────────────────────
+function toggleDarkMode() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  applyTheme(newTheme);
+  DB.s('theme', newTheme);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('darkModeToggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+// Apply saved theme on load
+(function() {
+  const saved = DB.g ? DB.g('theme', 'light') : (localStorage.getItem('pos_theme') || 'light');
+  applyTheme(saved);
+})();
+
 
 // ── MOBILE HELPERS ──────────────────────────
 function isMobile() { return window.innerWidth <= 768; }
@@ -2574,7 +2871,43 @@ function showReceipt(sale) {
 function printReceipt() {
   const html = document.getElementById('receiptContent').innerHTML;
   const w = window.open('','_blank','width=400,height=600');
-  w.document.write('<html dir="rtl"><head><style>body{font-family:monospace;direction:rtl;padding:20px;font-size:13px;}</style></head><body>' + html + '</body></html>');
+  w.document.write('<html dir="rtl"><head><style>body{font-family:monospace;direction:rtl;padding:20px;font-size:13px;}</style></head><body>' + html + '
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'none';
+  showToast('✅ تم تثبيت التطبيق بنجاح!');
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(result => {
+    deferredPrompt = null;
+    if (result.outcome === 'accepted') showToast('🎉 جاري تثبيت التطبيق...');
+  });
+}
+</script>
+</body></html>');
   w.document.close(); w.print();
 }
 
@@ -2603,7 +2936,7 @@ function showPage(page) {
   if (page === 'sales')      { initSalesFilter(); renderSales(); }
   if (page === 'reports')    { buildSalesReport(); setTimeout(()=>showVLTab('catreport'),100); }
   if (page === 'suspended')  renderSuspendedPage();
-  if (page === 'settings')   { renderSellersSettings(); renderLastBackupInfo(); document.getElementById('sVipThreshold').value = _settingsCache.vipThreshold || 1000; populateBranchNameInputs(); renderBranchUsersSettings(); }
+  if (page === 'settings')   { renderSellersSettings(); renderLastBackupInfo(); initGoogleDriveUI(); document.getElementById('sVipThreshold').value = _settingsCache.vipThreshold || 1000; populateBranchNameInputs(); renderBranchUsersSettings(); }
   if (page === 'customers')  renderCustomers();
   if (page === 'promos')     renderPromosPage();
   if (page === 'transfers')  renderTransfersPage();
@@ -3666,7 +3999,43 @@ function printReport(sectionId) {
     <style>body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:13px;}
     table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:7px;text-align:right;}
     th{background:#f0f0f0;}.hidden,.btn,.tabs,.flex.gap-8.mb-16{display:none!important;}</style>
-    </head><body>${html}</body></html>`);
+    </head><body>${html}
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'none';
+  showToast('✅ تم تثبيت التطبيق بنجاح!');
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(result => {
+    deferredPrompt = null;
+    if (result.outcome === 'accepted') showToast('🎉 جاري تثبيت التطبيق...');
+  });
+}
+</script>
+</body></html>`);
   w.document.close(); w.print();
 }
 
@@ -6354,7 +6723,15 @@ function printBarcodes() {
   const w = window.open('','_blank','width=800,height=600');
   const scTag = 'scr'+'ipt';
   const html = '<!DOCTYPE html><html dir="rtl"><head>'
-    + '<meta charset="UTF-8">'
+    + '<meta charset="UTF-8">
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1a5faf">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AL-AHRAM POS">
+  <link rel="apple-touch-icon" href="/icon-192.png">'
     + '<' + scTag + ' src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></' + scTag + '>'
     + '<style>body{margin:0;padding:10px;font-family:monospace;}.tags-wrap{display:flex;flex-wrap:wrap;gap:4px;}@media print{@page{margin:5mm;}body{padding:0;}}</style>'
     + '</head><body>'
@@ -6366,7 +6743,43 @@ function printBarcodes() {
     + 'try{JsBarcode(svg,code.replace(/-/g,""),{format:"CODE128",displayValue:true,fontSize:8,height:28,margin:2});}catch(e2){}}'
     + '});setTimeout(function(){window.print();},800);};'
     + '</' + scTag + '>'
-    + '</body></html>';
+    + '
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'none';
+  showToast('✅ تم تثبيت التطبيق بنجاح!');
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(result => {
+    deferredPrompt = null;
+    if (result.outcome === 'accepted') showToast('🎉 جاري تثبيت التطبيق...');
+  });
+}
+</script>
+</body></html>';
   w.document.write(html);
   w.document.close();
 }
@@ -8470,5 +8883,41 @@ setInterval(updateHomeClock, 1000);
       </div>
     </div>
   </div>
+
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.style.display = 'none';
+  showToast('✅ تم تثبيت التطبيق بنجاح!');
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(result => {
+    deferredPrompt = null;
+    if (result.outcome === 'accepted') showToast('🎉 جاري تثبيت التطبيق...');
+  });
+}
+</script>
 </body>
 </html>
