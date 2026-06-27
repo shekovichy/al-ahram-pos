@@ -3959,24 +3959,11 @@ function renderLastBackupInfo() {
 function printReport(sectionId) {
   const html = document.getElementById(sectionId).innerHTML;
   const w = window.open('','_blank');
-  w.document.write(`<html dir="rtl"><head><title>تقرير</title>
-    <style>body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:13px;}
-    table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:7px;text-align:right;}
-    th{background:#f0f0f0;}.hidden,.btn,.tabs,.flex.gap-8.mb-16{display:none!important;}</style>
-    </head><body>${html}
-<!-- PWA Service Worker Registration -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.warn('SW registration failed:', err));
-  });
-}
-
-}
-</script>
-</body></html>`);
+  w.document.write('<html dir="rtl"><head><title>تقرير</title>'
+    + '<style>body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:13px;}'
+    + 'table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:7px;text-align:right;}'
+    + 'th{background:#f0f0f0;}.hidden,.btn,.tabs,.flex.gap-8.mb-16{display:none!important;}</style>'
+    + '</head><body>' + html + '</body></html>');
   w.document.close(); w.print();
 }
 
@@ -6664,15 +6651,7 @@ function printBarcodes() {
   const w = window.open('','_blank','width=800,height=600');
   const scTag = 'scr'+'ipt';
   const html = '<!DOCTYPE html><html dir="rtl"><head>'
-    + '<meta charset="UTF-8">
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1a5faf">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="AL-AHRAM POS">
-  <link rel="apple-touch-icon" href="/icon-192.png">'
+    + '<meta charset="UTF-8">'
     + '<' + scTag + ' src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></' + scTag + '>'
     + '<style>body{margin:0;padding:10px;font-family:monospace;}.tags-wrap{display:flex;flex-wrap:wrap;gap:4px;}@media print{@page{margin:5mm;}body{padding:0;}}</style>'
     + '</head><body>'
@@ -6684,20 +6663,7 @@ function printBarcodes() {
     + 'try{JsBarcode(svg,code.replace(/-/g,""),{format:"CODE128",displayValue:true,fontSize:8,height:28,margin:2});}catch(e2){}}'
     + '});setTimeout(function(){window.print();},800);};'
     + '</' + scTag + '>'
-    + '
-<!-- PWA Service Worker Registration -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.warn('SW registration failed:', err));
-  });
-}
-
-}
-</script>
-</body></html>';
+    + '</body></html>';
   w.document.write(html);
   w.document.close();
 }
@@ -8801,19 +8767,6 @@ setInterval(updateHomeClock, 1000);
       </div>
     </div>
   </div>
-
-<!-- PWA Service Worker Registration -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.warn('SW registration failed:', err));
-  });
-}
-
-}
-</script>
 
 <!-- PWA Service Worker Registration -->
 <script>
