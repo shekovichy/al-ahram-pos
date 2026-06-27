@@ -1,5 +1,5 @@
-// AL-AHRAM POS — Service Worker v1
-const CACHE_NAME = 'ahram-pos-v1';
+// VOODO ERP — Service Worker v1
+const CACHE_NAME = 'voodo-erp-v1';
 const OFFLINE_URL = '/';
 
 // Files to cache for offline use

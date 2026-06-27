@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="AL-AHRAM POS">
+  <meta name="apple-mobile-web-app-title" content="VOODO ERP">
   <link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VOODO ERP — نظام الكاشير</title>
@@ -2521,7 +2521,7 @@ async function backupToGoogleDrive(silent) {
     sellers:DB.g('pos_sellers',[]), branchNames:DB.g('pos_branch_names',{}),
     purchases:DB.g('pos_purchases',[]), suppliers:DB.g('pos_suppliers',[]),
   };
-  const fileName = 'AlAhram_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+  const fileName = 'VoodoERP_Backup_' + new Date().toISOString().slice(0,10) + '.json';
   const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
   try {
     const form = new FormData();
@@ -3969,7 +3969,7 @@ function exportBackup() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = 'alahram_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'voodo_erp_backup_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
   DB.s('lastBackup', new Date().toISOString());
