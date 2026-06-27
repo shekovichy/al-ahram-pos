@@ -60,7 +60,58 @@
   --table-head-bg: #1e2f42;
   --modal-bg: #1a2535;
   --shadow: rgba(0,0,0,.3);
+  --badge-success-bg: #0d2e1a; --badge-success-text: #4ade80;
+  --badge-warning-bg: #2d1f06; --badge-warning-text: #fbbf24;
+  --badge-danger-bg:  #2d0e0e; --badge-danger-text:  #f87171;
+  --badge-info-bg:    #0d1e35; --badge-info-text:    #60a5fa;
+  --badge-gray-bg:    #1e2a38; --badge-gray-text:    #94a3b8;
+  --alert-success-bg: #0a2218; --alert-success-border: #166534; --alert-success-text: #4ade80;
+  --alert-danger-bg:  #220e0e; --alert-danger-border:  #7f1d1d; --alert-danger-text:  #f87171;
+  --alert-warning-bg: #1f1405; --alert-warning-border: #78350f; --alert-warning-text: #fbbf24;
 }
+
+/* ── DARK MODE ELEMENT OVERRIDES ─────────────────────────────── */
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-overlay > div { background: var(--modal-bg) !important; color: var(--text) !important; }
+
+[data-theme="dark"] .qty-btn { background: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+[data-theme="dark"] .btn-gray { background: #243044 !important; color: var(--text) !important; }
+[data-theme="dark"] .btn-gray:hover { background: #2e3d55 !important; }
+
+[data-theme="dark"] tr:hover td { background: #1e2f42 !important; }
+[data-theme="dark"] table thead th { background: var(--table-head-bg) !important; color: var(--text) !important; }
+[data-theme="dark"] table td { color: var(--text) !important; border-color: var(--border) !important; }
+[data-theme="dark"] table { background: var(--card) !important; }
+
+[data-theme="dark"] .badge-success { background: var(--badge-success-bg) !important; color: var(--badge-success-text) !important; border: 1px solid #166534; }
+[data-theme="dark"] .badge-warning { background: var(--badge-warning-bg) !important; color: var(--badge-warning-text) !important; border: 1px solid #78350f; }
+[data-theme="dark"] .badge-danger  { background: var(--badge-danger-bg)  !important; color: var(--badge-danger-text)  !important; border: 1px solid #7f1d1d; }
+[data-theme="dark"] .badge-info    { background: var(--badge-info-bg)    !important; color: var(--badge-info-text)    !important; border: 1px solid #1e3a5f; }
+[data-theme="dark"] .badge-gray    { background: var(--badge-gray-bg)    !important; color: var(--badge-gray-text)    !important; }
+[data-theme="dark"] .badge-return  { background: var(--badge-danger-bg)  !important; color: var(--badge-danger-text)  !important; border-color: #7f1d1d !important; }
+
+[data-theme="dark"] .alert-success { background: var(--alert-success-bg) !important; color: var(--alert-success-text) !important; border-color: var(--alert-success-border) !important; }
+[data-theme="dark"] .alert-danger  { background: var(--alert-danger-bg)  !important; color: var(--alert-danger-text)  !important; border-color: var(--alert-danger-border)  !important; }
+[data-theme="dark"] .alert-warning { background: var(--alert-warning-bg) !important; color: var(--alert-warning-text) !important; border-color: var(--alert-warning-border) !important; }
+
+[data-theme="dark"] .selected-customer-box { background: #0a2218 !important; border-color: #166534 !important; color: var(--text) !important; }
+[data-theme="dark"] .customer-dd-item:hover { background: var(--sidebar-hover) !important; }
+[data-theme="dark"] .customer-dd { background: var(--card) !important; border-color: var(--border) !important; }
+[data-theme="dark"] .customer-dd-item { color: var(--text) !important; border-color: var(--border) !important; }
+[data-theme="dark"] .return-row td { background: #220e0e !important; }
+
+[data-theme="dark"] .form-control { background: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+[data-theme="dark"] .form-control:focus { border-color: var(--primary) !important; }
+[data-theme="dark"] .form-group label { color: var(--text) !important; }
+[data-theme="dark"] select option { background: var(--input-bg); color: var(--text); }
+
+[data-theme="dark"] .card-title { color: var(--text) !important; }
+[data-theme="dark"] .topbar h1 { color: var(--text) !important; }
+[data-theme="dark"] .section-title { color: var(--text) !important; }
+
+[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--bg); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--border); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Jost', 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); direction: rtl; transition: background .3s, color .3s; }
 
@@ -166,7 +217,7 @@ tr:hover td { background:#f8fafc; }
 .cart-item-name { font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cart-item-price { font-size:11px; color:var(--text-muted); margin-top:2px; }
 .qty-ctrl { display:flex; align-items:center; gap:4px; flex-shrink:0; }
-.qty-btn { width:24px; height:24px; border:1px solid var(--border); border-radius:5px; cursor:pointer; font-size:14px; background:white; display:flex; align-items:center; justify-content:center; line-height:1; font-family:inherit; }
+.qty-btn { width:24px; height:24px; border:1px solid var(--border); border-radius:5px; cursor:pointer; font-size:14px; background:var(--card); color:var(--text); display:flex; align-items:center; justify-content:center; line-height:1; font-family:inherit; }
 .qty-btn:hover { background:var(--primary); color:white; border-color:var(--primary); }
 .qty-num { font-size:13px; font-weight:700; min-width:20px; text-align:center; }
 .item-total { font-size:12px; font-weight:700; min-width:50px; text-align:left; flex-shrink:0; }
@@ -178,7 +229,7 @@ tr:hover td { background:#f8fafc; }
 
 /* ---- MODAL ---- */
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
-.modal { background:white; border-radius:16px; padding:28px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,.3); max-height:90vh; overflow-y:auto; }
+.modal { background:var(--modal-bg); border-radius:16px; padding:28px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,.3); max-height:90vh; overflow-y:auto; color:var(--text); }
 .modal h2 { font-size:18px; font-weight:700; margin-bottom:18px; }
 .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
 
