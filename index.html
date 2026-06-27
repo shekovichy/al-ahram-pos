@@ -2653,8 +2653,10 @@ async function preInitFirebase() {
     ]);
     if (snap.exists) {
       const data = snap.data();
-      if (data.users)       DB.s('users', data.users);
-      if (data.branchUsers) DB.s('pos_branch_users', data.branchUsers);
+      const localU = DB.g('users', { admin: '', cashier: '' });
+      if (data.users && !localU.admin) DB.s('users', data.users);
+      const localBU = DB.g('pos_branch_users', null);
+      if (data.branchUsers && !localBU) DB.s('pos_branch_users', data.branchUsers);
     }
   } catch(e) {
     console.warn('preInitFirebase failed:', e);
