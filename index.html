@@ -640,6 +640,22 @@ body.pos-fullscreen #cartFab { z-index:700; }
 </head>
 <body>
 
+<!-- ===================== LOADING OVERLAY ===================== -->
+<div id="appLoadingOverlay" style="position:fixed;inset:0;background:#0d1b35;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
+  <svg width="52" height="52" viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:18px;">
+    <polygon points="29,3 53,16 53,42 29,55 5,42 5,16" fill="#0d1b35" stroke="#1a5faf" stroke-width="2"/>
+    <circle cx="29" cy="29" r="6" fill="#1a5faf"/>
+    <circle cx="29" cy="14" r="3.5" fill="#F47920"/>
+    <circle cx="42" cy="21" r="3.5" fill="#F47920"/>
+    <circle cx="42" cy="37" r="3.5" fill="#F47920"/>
+    <circle cx="29" cy="44" r="3.5" fill="#2472cc"/>
+    <circle cx="16" cy="37" r="3.5" fill="#2472cc"/>
+    <circle cx="16" cy="21" r="3.5" fill="#2472cc"/>
+  </svg>
+  <div style="color:#fff;font-size:18px;font-weight:700;margin-bottom:8px;">VOODO ERP</div>
+  <div style="color:#94a3b8;font-size:13px;">جاري التحميل...</div>
+</div>
+
 <!-- ===================== LOGIN ===================== -->
 <div id="loginPage">
   <div class="login-wrap">
@@ -2617,6 +2633,31 @@ function applyMobileUI() {
 }
 
 window.addEventListener('resize', applyMobileUI);
+// ── PRE-INIT: load passwords from Firebase before showing login ──
+async function preInitFirebase() {
+  const overlay = document.getElementById('appLoadingOverlay');
+  try {
+    if (!FIREBASE_CONFIG.projectId) { if(overlay) overlay.style.display='none'; return; }
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.firestore();
+    // fetch auth doc with a short timeout (3s)
+    const snap = await Promise.race([
+      db.collection('pos_data').doc('auth').get(),
+      new Promise((_,reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+    ]);
+    if (snap.exists) {
+      const data = snap.data();
+      if (data.users)       DB.s('users', data.users);
+      if (data.branchUsers) DB.s('pos_branch_users', data.branchUsers);
+    }
+  } catch(e) {
+    console.warn('preInitFirebase failed:', e);
+  } finally {
+    if (overlay) overlay.style.display = 'none';
+  }
+}
+preInitFirebase();
+
 document.addEventListener('DOMContentLoaded', applyMobileUI);
 
 // ── CLOCK ────────────────────────────────────
