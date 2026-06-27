@@ -4101,9 +4101,14 @@ async function saveBranchUsers() {
   for (const b of BRANCH_IDS) {
     const uname = document.getElementById(`bu-user-${b}`)?.value.trim();
     const upass  = document.getElementById(`bu-pass-${b}`)?.value.trim();
-    if (uname && upass && upass.length >= 4) {
-      const hashed = await hashPass(upass);
-      bu[b] = { username: uname, password: hashed };
+    if (uname) {
+      if (upass && upass.length >= 4) {
+        const hashed = await hashPass(upass);
+        bu[b] = { username: uname, password: hashed };
+      } else if (upass === '') {
+        // Keep existing password hash unchanged
+        bu[b] = { username: uname, password: bu[b]?.password || '' };
+      }
     }
   }
   setBranchUsersLocal(bu);
