@@ -500,7 +500,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
   display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; margin-bottom:4px;
 }
 .cmp-card {
-  background:#f8fafc; border:1px solid var(--border); border-radius:10px;
+  background:var(--card); border:1px solid var(--border); border-radius:10px;
   padding:10px 14px; flex:1; min-width:140px; text-align:center;
 }
 .cmp-label { font-size:11px; color:var(--text-muted); margin-bottom:4px; }
@@ -1347,7 +1347,7 @@ body.pos-fullscreen #cartFab { z-index:700; }
         </div>
 
         <!-- Inventory table -->
-        <div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+        <div style="overflow-x:auto;background:var(--card);border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
           <table style="width:100%;border-collapse:collapse;font-size:13px;">
             <thead>
               <tr style="background:var(--sidebar);color:white;position:sticky;top:0;">
@@ -7251,7 +7251,7 @@ function renderCategoryReport(fromDate, toDate) {
     var rows = Object.values(map).sort(function(a,b){return b.revenue-a.revenue;});
     if (!rows.length) return '<div style="padding:20px;color:var(--text-muted);text-align:center;">لا توجد مبيعات في هذه الفترة</div>';
     var t = '<div style="font-size:14px;font-weight:700;margin:16px 0 10px;">'+icon+' '+title+'</div>';
-    t += '<div style="overflow-x:auto;background:white;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:20px;">';
+    t += '<div style="overflow-x:auto;background:var(--card);border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:20px;">';
     t += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
     t += '<thead><tr style="background:var(--sidebar);color:white;">';
     ['الاسم','الإيراد','التكلفة','هامش %','الكمية','% من الإجمالي','أعلى منتج'].forEach(function(h){ t += '<th style="padding:9px 8px;text-align:center;">'+h+'</th>'; });
@@ -7260,16 +7260,17 @@ function renderCategoryReport(fromDate, toDate) {
       var margin = r.revenue>0 ? Math.round((r.revenue-r.cost)/r.revenue*100) : 0;
       var pct    = Math.round(r.revenue/totalRev*100);
       var topItem= Object.entries(r.items).sort(function(a,b){return b[1]-a[1];})[0];
-      var mg_bg  = margin>=30?'#dcfce7':margin>=15?'#fef9c3':'#fee2e2';
-      var mg_tc  = margin>=30?'#15803d':margin>=15?'#854d0e':'#b91c1c';
-      t += '<tr style="border-bottom:1px solid var(--border);background:'+(i%2===0?'white':'#fafafa')+'">';
+      var _dark  = document.documentElement.getAttribute('data-theme')==='dark';
+      var mg_bg  = _dark ? (margin>=30?'#0a2218':margin>=15?'#2d1f06':'#2d0e0e') : (margin>=30?'#dcfce7':margin>=15?'#fef9c3':'#fee2e2');
+      var mg_tc  = _dark ? (margin>=30?'#4ade80':margin>=15?'#fbbf24':'#f87171') : (margin>=30?'#15803d':margin>=15?'#854d0e':'#b91c1c');
+      t += '<tr style="border-bottom:1px solid var(--border);background:'+(i%2===0?'var(--card)':'var(--bg)')+'">';
       t += '<td style="padding:8px 10px;font-weight:700;">'+r.name+'</td>';
-      t += '<td style="padding:8px;text-align:center;font-weight:700;color:#1d4ed8;">'+fmt(r.revenue)+' ج</td>';
+      t += '<td style="padding:8px;text-align:center;font-weight:700;color:var(--primary);">'+fmt(r.revenue)+' ج</td>';
       t += '<td style="padding:8px;text-align:center;">'+fmt(r.cost)+' ج</td>';
       t += '<td style="padding:8px;text-align:center;"><span style="background:'+mg_bg+';color:'+mg_tc+';padding:2px 8px;border-radius:12px;font-size:11px;">'+margin+'%</span></td>';
       t += '<td style="padding:8px;text-align:center;">'+r.qty+'</td>';
       t += '<td style="padding:8px;text-align:center;">';
-      t += '<div style="background:var(--bg-secondary);border-radius:4px;height:6px;margin-bottom:2px;"><div style="background:#1a5faf;height:6px;border-radius:4px;width:'+Math.min(pct,100)+'%;"></div></div>';
+      t += '<div style="background:var(--border);border-radius:4px;height:6px;margin-bottom:2px;"><div style="background:var(--primary);height:6px;border-radius:4px;width:'+Math.min(pct,100)+'%;"></div></div>';
       t += '<span style="font-size:11px;">'+pct+'%</span></td>';
       t += '<td style="padding:8px;text-align:center;font-size:12px;">'+(topItem?topItem[0]+' (x'+topItem[1]+')':'-')+'</td>';
       t += '</tr>';
@@ -7287,13 +7288,16 @@ function renderCategoryReport(fromDate, toDate) {
   var out = '';
   // KPI row
   out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;">';
-  [{l:'إيراد الفترة',v:fmt(totalRev)+' ج',bg:'#eff6ff',tc:'#1d4ed8'},
-   {l:'هامش الربح',  v:totalMargin+'%',   bg:'#dcfce7',tc:'#15803d'},
-   {l:'عدد الفواتير',v:salesCount,        bg:'#f5f3ff',tc:'#6d28d9'},
-   {l:'عدد الفئات',  v:catCount,          bg:'#fef9c3',tc:'#854d0e'},
-   {l:'عدد المجموعات',v:famCount,         bg:'#fde8d0',tc:'#9a3412'}].forEach(function(k){
-    out += '<div style="background:'+k.bg+';border-radius:8px;padding:12px;text-align:center;">';
-    out += '<div style="font-size:20px;font-weight:800;color:'+k.tc+';">'+k.v+'</div>';
+  var isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  [{l:'إيراد الفترة', v:fmt(totalRev)+' ج', bg_l:'#eff6ff', tc_l:'#1d4ed8', bg_d:'#0d1e35', tc_d:'#60a5fa'},
+   {l:'هامش الربح',   v:totalMargin+'%',    bg_l:'#dcfce7', tc_l:'#15803d', bg_d:'#0a2218', tc_d:'#4ade80'},
+   {l:'عدد الفواتير', v:salesCount,         bg_l:'#f5f3ff', tc_l:'#6d28d9', bg_d:'#1a1035', tc_d:'#a78bfa'},
+   {l:'عدد الفئات',   v:catCount,           bg_l:'#fef9c3', tc_l:'#854d0e', bg_d:'#2d1f06', tc_d:'#fbbf24'},
+   {l:'عدد المجموعات',v:famCount,           bg_l:'#fde8d0', tc_l:'#9a3412', bg_d:'#2a1205', tc_d:'#fb923c'}].forEach(function(k){
+    var bg = isDark ? k.bg_d : k.bg_l;
+    var tc = isDark ? k.tc_d : k.tc_l;
+    out += '<div style="background:'+bg+';border-radius:8px;padding:12px;text-align:center;">';
+    out += '<div style="font-size:20px;font-weight:800;color:'+tc+';">'+k.v+'</div>';
     out += '<div style="font-size:11px;color:var(--text-muted);">'+k.l+'</div></div>';
   });
   out += '</div>';
