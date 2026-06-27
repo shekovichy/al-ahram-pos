@@ -3974,29 +3974,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// PWA install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = document.getElementById('pwaInstallBtn');
-  if (btn) btn.style.display = 'flex';
-});
-
-window.addEventListener('appinstalled', () => {
-  deferredPrompt = null;
-  const btn = document.getElementById('pwaInstallBtn');
-  if (btn) btn.style.display = 'none';
-  showToast('✅ تم تثبيت التطبيق بنجاح!');
-});
-
-function installPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(result => {
-    deferredPrompt = null;
-    if (result.outcome === 'accepted') showToast('🎉 جاري تثبيت التطبيق...');
-  });
 }
 </script>
 </body></html>`);
@@ -6718,29 +6695,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// PWA install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = document.getElementById('pwaInstallBtn');
-  if (btn) btn.style.display = 'flex';
-});
-
-window.addEventListener('appinstalled', () => {
-  deferredPrompt = null;
-  const btn = document.getElementById('pwaInstallBtn');
-  if (btn) btn.style.display = 'none';
-  showToast('✅ تم تثبيت التطبيق بنجاح!');
-});
-
-function installPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(result => {
-    deferredPrompt = null;
-    if (result.outcome === 'accepted') showToast('🎉 جاري تثبيت التطبيق...');
-  });
 }
 </script>
 </body></html>';
@@ -8858,29 +8812,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// PWA install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = document.getElementById('pwaInstallBtn');
-  if (btn) btn.style.display = 'flex';
-});
-
-window.addEventListener('appinstalled', () => {
-  deferredPrompt = null;
-  const btn = document.getElementById('pwaInstallBtn');
-  if (btn) btn.style.display = 'none';
-  showToast('✅ تم تثبيت التطبيق بنجاح!');
-});
-
-function installPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(result => {
-    deferredPrompt = null;
-    if (result.outcome === 'accepted') showToast('🎉 جاري تثبيت التطبيق...');
-  });
 }
 </script>
 
