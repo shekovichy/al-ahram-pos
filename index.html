@@ -4106,7 +4106,8 @@ async function saveBranchUsers() {
   }
   setBranchUsersLocal(bu);
   if (typeof _fbReady !== 'undefined' && _fbReady && _db) {
-    _db.collection('pos_data').doc('auth').set({ users: getUsers(), branchUsers: bu, updatedAt: Date.now() }).catch(()=>{});
+    _db.collection('pos_data').doc('auth').update({ branchUsers: bu, updatedAt: Date.now() })
+      .catch(() => _db.collection('pos_data').doc('auth').set({ users: getUsers(), branchUsers: bu, updatedAt: Date.now() }).catch(()=>{}));
   }
   showMsg('sBranchUsersMsg', '✅ تم حفظ بيانات دخول الفروع');
 }
@@ -4122,7 +4123,8 @@ function changePass(role) {
       users.admin = hashed;
       setUsersLocal(users);
       if (typeof _fbReady !== 'undefined' && _fbReady && _db) {
-        _db.collection('pos_data').doc('auth').set({ users: users, updatedAt: Date.now() }).catch(()=>{});
+        _db.collection('pos_data').doc('auth').update({ users: users, updatedAt: Date.now() })
+          .catch(() => _db.collection('pos_data').doc('auth').set({ users: users, updatedAt: Date.now() }).catch(()=>{}));
       }
       showMsg('sAdminMsg','✅ تم تغيير كلمة المرور');
       document.getElementById('sCurrPass').value = '';
@@ -4397,8 +4399,10 @@ function initFirebase() {
       .onSnapshot(snap => {
         if (snap.exists) {
           const data = snap.data();
-          if (data.users)       DB.s('users', data.users);
-          if (data.branchUsers) DB.s('pos_branch_users', data.branchUsers);
+          const localU = DB.g('users', { admin: '', cashier: '' });
+          if (data.users && !localU.admin) DB.s('users', data.users);
+          const localBU = DB.g('pos_branch_users', null);
+          if (data.branchUsers && !localBU) DB.s('pos_branch_users', data.branchUsers);
         } else {
           // First time: upload local passwords to Firestore
           _db.collection('pos_data').doc('auth').set({
@@ -4885,6 +4889,7 @@ function saveBranchNames() {
   }
   DB.s('pos_branches', branches);
   populateBranchSelect();
+  loadBranchNamesUI();
   showMsg('sBranchMsg', 'تم حفظ أسماء الفروع ✓', 'success');
 }
 
