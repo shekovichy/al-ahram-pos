@@ -1482,7 +1482,21 @@ function buildSalesReport() {
 }
 
 function buildInventoryReport() {
-  const inv = getInv(), thresh = getThreshold();
+  const rbf = document.getElementById('rptInventoryBranchFilter');
+  if (rbf && rbf.options.length <= 1) {
+    const branches = getBranches();
+    BRANCH_IDS.forEach(b => {
+      if (!rbf.querySelector(`option[value="${b}"]`)) {
+        const o = document.createElement('option'); o.value = b; o.textContent = branches[b]||BRANCH_DEFAULTS[b];
+        rbf.appendChild(o);
+      }
+    });
+  }
+  const branchFilter = rbf?.value || 'all';
+  const inv = branchFilter === 'all'
+    ? Object.values(_invCacheByBranch).flat()
+    : getInv(branchFilter);
+  const thresh = getThreshold();
   const costVal = inv.reduce((s,p)=>s+(p.cost||0)*p.qty,0);
   const sellVal = inv.reduce((s,p)=>s+p.priceAfter*p.qty,0);
   const units   = inv.reduce((s,p)=>s+p.qty,0);
@@ -1591,8 +1605,23 @@ function buildKPIReport() {
   const period = document.getElementById('rptKpiPeriod').value;
   document.getElementById('rptKpiCustom').classList.toggle('hidden', period!=='custom');
   const { from, to } = getDateRange(period, 'rptKpiFrom', 'rptKpiTo');
-  const inv   = getInv();
-  const sales = getSales().filter(s => { const d=new Date(s.date); return d>=from&&d<=to; });
+  const rbf = document.getElementById('rptKpiBranchFilter');
+  if (rbf && rbf.options.length <= 1) {
+    const branches = getBranches();
+    BRANCH_IDS.forEach(b => {
+      if (!rbf.querySelector(`option[value="${b}"]`)) {
+        const o = document.createElement('option'); o.value = b; o.textContent = branches[b]||BRANCH_DEFAULTS[b];
+        rbf.appendChild(o);
+      }
+    });
+  }
+  const branchFilter = rbf?.value || 'all';
+  const inv   = branchFilter === 'all'
+    ? Object.values(_invCacheByBranch).flat()
+    : getInv(branchFilter);
+  const sales = getSales()
+    .filter(s => branchFilter === 'all' || s.branchId === branchFilter)
+    .filter(s => { const d=new Date(s.date); return d>=from&&d<=to; });
 
   const count      = sales.length;
   const revenue    = sales.reduce((s,x)=>s+x.total,0);
@@ -1614,7 +1643,7 @@ function buildKPIReport() {
 
   const turnFrom = document.getElementById('turnoverFrom')?.value;
   const turnTo   = document.getElementById('turnoverTo')?.value;
-  const tvSales  = getSales().filter(s => {
+  const tvSales  = getSales().filter(s => branchFilter === 'all' || s.branchId === branchFilter).filter(s => {
     if (!turnFrom && !turnTo) return true;
     const d = s.date.slice(0,10);
     return (!turnFrom || d>=turnFrom) && (!turnTo || d<=turnTo);
@@ -4050,8 +4079,20 @@ function buildReturnsReport() {
   const period = document.getElementById('rptReturnsPeriod').value;
   document.getElementById('rptReturnsCustom').classList.toggle('hidden', period!=='custom');
   const { from, to } = getDateRange(period, 'rptReturnsFrom', 'rptReturnsTo');
+  const rbf = document.getElementById('rptReturnsBranchFilter');
+  if (rbf && rbf.options.length <= 1) {
+    const branches = getBranches();
+    BRANCH_IDS.forEach(b => {
+      if (!rbf.querySelector(`option[value="${b}"]`)) {
+        const o = document.createElement('option'); o.value = b; o.textContent = branches[b]||BRANCH_DEFAULTS[b];
+        rbf.appendChild(o);
+      }
+    });
+  }
+  const branchFilter = rbf?.value || 'all';
   const returns = getSales().filter(s => {
     if (!s.isReturn) return false;
+    if (branchFilter !== 'all' && s.branchId !== branchFilter) return false;
     const d = new Date(s.date); return d >= from && d <= to;
   });
   const count = returns.length;
