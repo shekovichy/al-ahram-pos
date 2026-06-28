@@ -377,6 +377,11 @@
             <select id="rptInventoryBranchFilter" class="form-control" style="width:140px;" onchange="buildInventoryReport()">
               <option value="all">🌎 كل الفروع</option>
             </select>
+
+            <!-- Branch filter -->
+            <select id="rptInventoryBranchFilter" class="form-control" style="width:140px;" onchange="buildInventoryReport()">
+              <option value="all">🌎 كل الفروع</option>
+            </select>
 </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <select class="form-control" id="invBranchFilter" onchange="renderInventory()" style="width:150px;font-size:13px;font-weight:600;color:#1d4ed8;"></select>
@@ -485,7 +490,12 @@
           <div class="flex gap-8 mb-16">
             <button class="btn btn-gray btn-sm" onclick="printReport('rpt-inventory')">🖨️ طباعة</button>
             <button class="btn btn-success btn-sm" onclick="exportInventoryExcel()">📥 تصدير Excel</button>
-          </div>
+          
+            <!-- Branch filter -->
+            <select id="rptInventoryBranchFilter" class="form-control" style="width:140px;" onchange="buildInventoryReport()">
+              <option value="all">🌎 كل الفروع</option>
+            </select>
+</div>
           <div class="stats-grid">
             <div class="stat-card"><div class="stat-label">إجمالي الأصناف</div><div class="stat-value" id="ri-count">0</div></div>
             <div class="stat-card"><div class="stat-label">قيمة المخزون (بالتكلفة)</div><div class="stat-value" id="ri-cost">0</div></div>
@@ -521,7 +531,12 @@
             <button class="btn btn-gray btn-sm" onclick="printReport('rpt-profit')">🖨️ طباعة</button>
             <button class="btn btn-success btn-sm" onclick="exportReportExcel('profit')">📊 Excel</button>
             <button class="btn btn-primary btn-sm" onclick="exportReportPDF('rpt-profit','تقرير الأرباح')">📄 PDF</button>
-          </div>
+          
+            <!-- Branch filter -->
+            <select id="rptProfitBranchFilter" class="form-control" style="width:140px;" onchange="buildProfitReport()">
+              <option value="all">🌎 كل الفروع</option>
+            </select>
+</div>
           <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
             <div class="stat-card"><div class="stat-label">💰 إجمالي الإيرادات</div><div class="stat-value" id="rp-revenue">0</div></div>
             <div class="stat-card"><div class="stat-label">🏷️ إجمالي التكلفة</div><div class="stat-value" id="rp-cost">0</div></div>
