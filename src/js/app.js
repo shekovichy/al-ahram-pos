@@ -1526,8 +1526,23 @@ function buildProfitReport() {
   populateSellerFilter('rptProfitSellerFilter');
   const sellerFilter = document.getElementById('rptProfitSellerFilter')?.value || '';
   const { from, to } = getDateRange(period, 'rptProfitFrom', 'rptProfitTo');
-  const inv   = getInv();
-  let sales = getSales().filter(s => { const d=new Date(s.date); return d>=from&&d<=to; });
+  const rbf = document.getElementById('rptProfitBranchFilter');
+  if (rbf && rbf.options.length <= 1) {
+    const branches = getBranches();
+    BRANCH_IDS.forEach(b => {
+      if (!rbf.querySelector(`option[value="${b}"]`)) {
+        const o = document.createElement('option'); o.value = b; o.textContent = branches[b]||BRANCH_DEFAULTS[b];
+        rbf.appendChild(o);
+      }
+    });
+  }
+  const branchFilter = rbf?.value || 'all';
+  const inv   = branchFilter === 'all'
+    ? Object.values(_invCacheByBranch).flat()
+    : getInv(branchFilter);
+  let sales = getSales()
+    .filter(s => branchFilter === 'all' || s.branchId === branchFilter)
+    .filter(s => { const d=new Date(s.date); return d>=from&&d<=to; });
   if (sellerFilter) {
     sales = sales.filter(s => sellerFilter==='__none__'
       ? !s.salesperson : s.salesperson===sellerFilter);
