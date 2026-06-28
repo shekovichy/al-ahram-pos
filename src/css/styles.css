@@ -616,9 +616,11 @@ body.pos-fullscreen #cartFab { z-index:700; }
 
 
 /* ── WAREHOUSE MODE: restrict wh user to warehouse & transfers only ── */
-body.warehouse-mode .nav-item:not([data-page="warehouse"]):not([data-page="transfers"]) {
+/* Hide topbar nav buttons that lead to non-warehouse pages */
+body.warehouse-mode .topbar button[onclick*="showPage"]:not([onclick*="'warehouse'"]):not([onclick*="'transfers'"]) {
   display: none !important;
 }
+/* Hide cart FAB */
 body.warehouse-mode #cartFab {
   display: none !important;
 }
