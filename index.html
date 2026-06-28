@@ -3017,6 +3017,7 @@ function closeModal(id) {
 // MANAGER PAGES
 // ══════════════════════════════════════════════
 function showPage(page) {
+  if (typeof setSnavActive === "function") setSnavActive(page);
   if (window._whMode && !['warehouse','transfers'].includes(page)) return;
   ['home','dashboard','inventory','sales','suspended','reports','customized','warehouse','settings','customers','promos','transfers','purchases','hr','expenses','audit','accounting'].forEach(p => {
     document.getElementById('page-'+p)?.classList.add('hidden');
