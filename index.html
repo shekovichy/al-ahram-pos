@@ -21,7 +21,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<style>
 
 :root {
   --primary: #1a5faf;
@@ -649,7 +648,6 @@ body.warehouse-mode #cartFab {
   display: none !important;
 }
 
-</style>
 
 </head>
 <body>
@@ -1005,6 +1003,11 @@ body.warehouse-mode #cartFab {
             <select id="rptInventoryBranchFilter" class="form-control" style="width:140px;" onchange="buildInventoryReport()">
               <option value="all">🌎 كل الفروع</option>
             </select>
+
+            <!-- Branch filter -->
+            <select id="rptInventoryBranchFilter" class="form-control" style="width:140px;" onchange="buildInventoryReport()">
+              <option value="all">🌎 كل الفروع</option>
+            </select>
 </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <select class="form-control" id="invBranchFilter" onchange="renderInventory()" style="width:150px;font-size:13px;font-weight:600;color:#1d4ed8;"></select>
@@ -1113,7 +1116,12 @@ body.warehouse-mode #cartFab {
           <div class="flex gap-8 mb-16">
             <button class="btn btn-gray btn-sm" onclick="printReport('rpt-inventory')">🖨️ طباعة</button>
             <button class="btn btn-success btn-sm" onclick="exportInventoryExcel()">📥 تصدير Excel</button>
-          </div>
+          
+            <!-- Branch filter -->
+            <select id="rptInventoryBranchFilter" class="form-control" style="width:140px;" onchange="buildInventoryReport()">
+              <option value="all">🌎 كل الفروع</option>
+            </select>
+</div>
           <div class="stats-grid">
             <div class="stat-card"><div class="stat-label">إجمالي الأصناف</div><div class="stat-value" id="ri-count">0</div></div>
             <div class="stat-card"><div class="stat-label">قيمة المخزون (بالتكلفة)</div><div class="stat-value" id="ri-cost">0</div></div>
@@ -1149,7 +1157,12 @@ body.warehouse-mode #cartFab {
             <button class="btn btn-gray btn-sm" onclick="printReport('rpt-profit')">🖨️ طباعة</button>
             <button class="btn btn-success btn-sm" onclick="exportReportExcel('profit')">📊 Excel</button>
             <button class="btn btn-primary btn-sm" onclick="exportReportPDF('rpt-profit','تقرير الأرباح')">📄 PDF</button>
-          </div>
+          
+            <!-- Branch filter -->
+            <select id="rptProfitBranchFilter" class="form-control" style="width:140px;" onchange="buildProfitReport()">
+              <option value="all">🌎 كل الفروع</option>
+            </select>
+</div>
           <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
             <div class="stat-card"><div class="stat-label">💰 إجمالي الإيرادات</div><div class="stat-value" id="rp-revenue">0</div></div>
             <div class="stat-card"><div class="stat-label">🏷️ إجمالي التكلفة</div><div class="stat-value" id="rp-cost">0</div></div>
@@ -2199,7 +2212,6 @@ body.warehouse-mode #cartFab {
   </div>
 </div>
 
-<script>
 
 // ══════════════════════════════════════════════
 // DATA
@@ -3728,8 +3740,23 @@ function buildProfitReport() {
   populateSellerFilter('rptProfitSellerFilter');
   const sellerFilter = document.getElementById('rptProfitSellerFilter')?.value || '';
   const { from, to } = getDateRange(period, 'rptProfitFrom', 'rptProfitTo');
-  const inv   = getInv();
-  let sales = getSales().filter(s => { const d=new Date(s.date); return d>=from&&d<=to; });
+  const rbf = document.getElementById('rptProfitBranchFilter');
+  if (rbf && rbf.options.length <= 1) {
+    const branches = getBranches();
+    BRANCH_IDS.forEach(b => {
+      if (!rbf.querySelector(`option[value="${b}"]`)) {
+        const o = document.createElement('option'); o.value = b; o.textContent = branches[b]||BRANCH_DEFAULTS[b];
+        rbf.appendChild(o);
+      }
+    });
+  }
+  const branchFilter = rbf?.value || 'all';
+  const inv   = branchFilter === 'all'
+    ? Object.values(_invCacheByBranch).flat()
+    : getInv(branchFilter);
+  let sales = getSales()
+    .filter(s => branchFilter === 'all' || s.branchId === branchFilter)
+    .filter(s => { const d=new Date(s.date); return d>=from&&d<=to; });
   if (sellerFilter) {
     sales = sales.filter(s => sellerFilter==='__none__'
       ? !s.salesperson : s.salesperson===sellerFilter);
@@ -8280,7 +8307,6 @@ async function confirmFirstRun() {
 setInterval(updateHomeClock, 1000);
 
 
-</script>
 
 
 <!-- ===================== CUSTOMER MODAL ===================== -->
