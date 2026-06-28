@@ -613,3 +613,12 @@ body.pos-fullscreen #cartFab { z-index:700; }
   .app-tile  { width: 80px; height: 80px; border-radius: 24px; }
   .app-tile svg { width: 42px; height: 42px; }
 }
+
+
+/* ── WAREHOUSE MODE: restrict wh user to warehouse & transfers only ── */
+body.warehouse-mode .nav-item:not([data-page="warehouse"]):not([data-page="transfers"]) {
+  display: none !important;
+}
+body.warehouse-mode #cartFab {
+  display: none !important;
+}
