@@ -21,7 +21,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<style>
 
 :root {
   --primary: #1a5faf;
@@ -640,14 +639,15 @@ body.pos-fullscreen #cartFab { z-index:700; }
 
 
 /* ── WAREHOUSE MODE: restrict wh user to warehouse & transfers only ── */
-body.warehouse-mode .nav-item:not([data-page="warehouse"]):not([data-page="transfers"]) {
+/* Hide topbar nav buttons that lead to non-warehouse pages */
+body.warehouse-mode .topbar button[onclick*="showPage"]:not([onclick*="'warehouse'"]):not([onclick*="'transfers'"]) {
   display: none !important;
 }
+/* Hide cart FAB */
 body.warehouse-mode #cartFab {
   display: none !important;
 }
 
-</style>
 
 </head>
 <body>
@@ -2182,7 +2182,6 @@ body.warehouse-mode #cartFab {
   </div>
 </div>
 
-<script>
 
 // ══════════════════════════════════════════════
 // DATA
@@ -8222,7 +8221,6 @@ async function confirmFirstRun() {
 setInterval(updateHomeClock, 1000);
 
 
-</script>
 
 
 <!-- ===================== CUSTOMER MODAL ===================== -->
