@@ -199,13 +199,24 @@ async function doLogin() {
       currentBranch = matchedBranch;
       DB.s('currentBranch', matchedBranch);
       document.getElementById('loginPage').classList.add('hidden');
-      document.getElementById('cashierView').classList.remove('hidden');
-      initFirebase();
-      applyMobileUI();
-      renderProducts();
-      updateClock();
-      setInterval(updateClock, 30000);
-      setTimeout(() => addAuditLog('auth.login', `تسجيل دخول كاشير: ${user} — ${getBranchName(matchedBranch)}`, matchedBranch), 500);
+      if (matchedBranch === 'wh') {
+        // Warehouse-only mode: restricted to warehouse & transfers pages
+        window._whMode = true;
+        document.body.classList.add('warehouse-mode');
+        document.getElementById('managerView').classList.remove('hidden');
+        document.getElementById('topbarLogout').style.display = 'inline-flex';
+        initFirebase();
+        showPage('warehouse');
+        setTimeout(() => addAuditLog('auth.login', `تسجيل دخول مخزن: ${user}`, matchedBranch), 500);
+      } else {
+        document.getElementById('cashierView').classList.remove('hidden');
+        initFirebase();
+        applyMobileUI();
+        renderProducts();
+        updateClock();
+        setInterval(updateClock, 30000);
+        setTimeout(() => addAuditLog('auth.login', `تسجيل دخول كاشير: ${user} — ${getBranchName(matchedBranch)}`, matchedBranch), 500);
+      }
     } else {
       document.getElementById('loginError').classList.remove('hidden');
     }
@@ -415,6 +426,8 @@ function logout() {
   document.getElementById('loginPage').classList.remove('hidden');
   document.getElementById('cashierView').classList.add('hidden');
   document.getElementById('managerView').classList.add('hidden');
+  window._whMode = false;
+  document.body.classList.remove('warehouse-mode');
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
 }
@@ -818,6 +831,7 @@ function closeModal(id) {
 // MANAGER PAGES
 // ══════════════════════════════════════════════
 function showPage(page) {
+  if (window._whMode && !['warehouse','transfers'].includes(page)) return;
   ['home','dashboard','inventory','sales','suspended','reports','customized','warehouse','settings','customers','promos','transfers','purchases','hr','expenses','audit','accounting'].forEach(p => {
     document.getElementById('page-'+p)?.classList.add('hidden');
   });
