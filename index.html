@@ -699,34 +699,6 @@ p  { color:var(--t2); line-height:1.7; }
 
 <!-- ===================== MANAGER VIEW ===================== -->
 <div id="managerView" class="hidden app-layout">
-    <!-- ═══ PREMIUM DARK SIDEBAR NAVIGATION ═══ -->
-    <nav class="erp-sidebar" id="erpSidebar">
-      <div class="sidebar-brand">
-        <div class="sidebar-logo">V</div>
-        <span class="sidebar-app-name">VOODO ERP</span>
-      </div>
-      <div class="sidebar-nav">
-        <div class="sidebar-section-label">القائمة الرئيسية</div>
-        <button class="snav-btn" id="snav-dashboard" onclick="showPage('dashboard');setSnavActive('dashboard')"><span class="snav-icon">🏠</span><span class="snav-label">الرئيسية</span></button>
-        <button class="snav-btn" id="snav-inventory" onclick="showPage('inventory');setSnavActive('inventory')"><span class="snav-icon">📦</span><span class="snav-label">المخزون</span></button>
-        <button class="snav-btn" id="snav-warehouse" onclick="showPage('warehouse');setSnavActive('warehouse')"><span class="snav-icon">🏪</span><span class="snav-label">المستودع</span></button>
-        <button class="snav-btn" id="snav-sales" onclick="showPage('sales');setSnavActive('sales')"><span class="snav-icon">🛒</span><span class="snav-label">نقطة البيع</span></button>
-        <button class="snav-btn" id="snav-customers" onclick="showPage('customers');setSnavActive('customers')"><span class="snav-icon">👤</span><span class="snav-label">العملاء (CRM)</span></button>
-        <div class="sidebar-section-label">العمليات</div>
-        <button class="snav-btn" id="snav-transfers" onclick="showPage('transfers');setSnavActive('transfers')"><span class="snav-icon">🔄</span><span class="snav-label">التحويلات</span></button>
-        <button class="snav-btn" id="snav-purchases" onclick="showPage('purchases');setSnavActive('purchases')"><span class="snav-icon">🛍️</span><span class="snav-label">المشتريات</span></button>
-        <button class="snav-btn" id="snav-reports" onclick="showPage('reports');setSnavActive('reports')"><span class="snav-icon">📊</span><span class="snav-label">التقارير</span></button>
-        <div class="sidebar-section-label">الإدارة</div>
-        <button class="snav-btn" id="snav-hr" onclick="showPage('hr');setSnavActive('hr')"><span class="snav-icon">👥</span><span class="snav-label">الموارد البشرية</span></button>
-        <button class="snav-btn" id="snav-expenses" onclick="showPage('expenses');setSnavActive('expenses')"><span class="snav-icon">💰</span><span class="snav-label">المصاريف</span></button>
-        <button class="snav-btn" id="snav-accounting" onclick="showPage('accounting');setSnavActive('accounting')"><span class="snav-icon">📋</span><span class="snav-label">المحاسبة</span></button>
-        <button class="snav-btn" id="snav-audit" onclick="showPage('audit');setSnavActive('audit')"><span class="snav-icon">🔍</span><span class="snav-label">سجل التغييرات</span></button>
-        <button class="snav-btn" id="snav-settings" onclick="showPage('settings');setSnavActive('settings')"><span class="snav-icon">⚙️</span><span class="snav-label">الإعدادات</span></button>
-      </div>
-      <div class="sidebar-footer">
-        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="طي القائمة">◀</button>
-      </div>
-    </nav>
 
   <div class="main-content">
     <div class="topbar">
@@ -2137,21 +2109,7 @@ p  { color:var(--t2); line-height:1.7; }
 </div>
 
 
-    <script>
-    function setSnavActive(page) {
-      document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
-      const el = document.getElementById('snav-' + page);
-      if (el) el.classList.add('active');
-    }
-    function toggleSidebar() {
-      const s = document.getElementById('erpSidebar');
-      if (s) {
-        s.classList.toggle('collapsed');
-        const btn = s.querySelector('.sidebar-toggle-btn');
-        if (btn) btn.textContent = s.classList.contains('collapsed') ? '▶' : '◀';
-      }
-    }
-    </script>
+    
     
 // ══════════════════════════════════════════════
 // DATA
@@ -2985,7 +2943,6 @@ function closeModal(id) {
 // MANAGER PAGES
 // ══════════════════════════════════════════════
 function showPage(page) {
-  if (typeof setSnavActive === "function") setSnavActive(page);
   if (window._whMode && !['warehouse','transfers'].includes(page)) return;
   ['home','dashboard','inventory','sales','suspended','reports','customized','warehouse','settings','customers','promos','transfers','purchases','hr','expenses','audit','accounting'].forEach(p => {
     document.getElementById('page-'+p)?.classList.add('hidden');
